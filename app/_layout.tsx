@@ -1,24 +1,35 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { AppProviders } from '@/src/providers/app-providers';
+import { useAuth } from '@/src/providers/auth-provider';
+import { useAppTheme } from '@/src/providers/theme-provider';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+void SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootNavigator() {
+  const { status } = useAuth();
+  const { mode } = useAppTheme();
+  useEffect(() => { if (status !== 'loading') void SplashScreen.hideAsync(); }, [status]);
+  if (status === 'loading') return null;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+    <>
+      <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(app)" />
+        <Stack.Screen name="book-reservation" options={{ animation: 'slide_from_right' }} />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+    </>
   );
+}
+
+export default function RootLayout() {
+  return <AppProviders><RootNavigator /></AppProviders>;
 }
