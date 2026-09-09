@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { PatientVisitCard } from '@/src/components/reservations/patient-visit-card';
+import { env } from '@/src/config/env';
 import { ScreenBackground } from '@/src/components/screen-background';
 import { AppButton } from '@/src/components/ui/app-button';
 import { ErrorList } from '@/src/components/ui/error-list';
@@ -29,7 +30,9 @@ export default function ReservationsScreen() {
         ListHeaderComponent={(
           <View style={styles.header}>
             <Text style={[styles.description, { color: colors.textMuted }]}>Track the reservation requests associated with your patient account.</Text>
-            <AppButton label="Book a new reservation" icon="add-circle-outline" onPress={() => router.push('/book-reservation')} />
+            {env.isReservationEnabled ? (
+              <AppButton label="Book a new reservation" icon="add-circle-outline" onPress={() => router.push('/book-reservation')} />
+            ) : null}
             {errors.length ? <ErrorList messages={errors} /> : null}
             {errors.length ? <AppButton label="Try again" variant="outline" onPress={() => void visitsQuery.refetch()} /> : null}
           </View>

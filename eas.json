@@ -15,7 +15,8 @@
       "environment": "preview",
       "node": "22.16.0",
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "credentialsSource": "local"
       },
       "env": {
         "EXPO_PUBLIC_PATIENT_PORTAL_API_URL": "http://192.168.1.100:8007",

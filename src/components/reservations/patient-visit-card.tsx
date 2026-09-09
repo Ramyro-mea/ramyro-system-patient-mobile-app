@@ -28,18 +28,20 @@ export function PatientVisitCard({ visit }: { visit: PatientVisit }) {
         </View>
         <View style={styles.headingText}>
           {visit.procedure ? (
-            <Text numberOfLines={2} style={[styles.title, { color: colors.text }]}>
+            <Text style={[styles.title, { color: colors.text }]}>
               {visit.procedure}
             </Text>
           ) : null}
-          <Text style={[styles.date, { color: colors.textMuted }]}>
-            {formatCairoDateTime(visit.createdAtUtc)}
-          </Text>
-        </View>
-        <View style={[styles.badge, { backgroundColor: badge.background }]}>
-          <Text numberOfLines={1} style={[styles.badgeText, { color: badge.foreground }]}>
-            {visit.status}
-          </Text>
+          <View style={styles.metaRow}>
+            <Text style={[styles.date, { color: colors.textMuted }]}>
+              {formatCairoDateTime(visit.createdAtUtc)}
+            </Text>
+            <View style={[styles.badge, { backgroundColor: badge.background }]}>
+              <Text style={[styles.badgeText, { color: badge.foreground }]}>
+                {visit.status}
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
       {visit.reasonForReservation ? (
@@ -56,11 +58,12 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: 18, padding: 15, gap: 14 },
   heading: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
   icon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  headingText: { flex: 1, gap: 4 },
+  headingText: { flex: 1, minWidth: 0, gap: 7 },
   title: { fontSize: 16, lineHeight: 21, fontWeight: '800' },
-  date: { fontSize: 12 },
-  badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, flexShrink: 0 },
-  badgeText: { fontSize: 11, fontWeight: '800' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  date: { fontSize: 11, flexGrow: 1, flexShrink: 1 },
+  badge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, flexShrink: 1 },
+  badgeText: { fontSize: 10, lineHeight: 12, fontWeight: '800' },
   detailLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
   reason: { gap: 5 },
   reasonText: { fontSize: 13, lineHeight: 19 },

@@ -13,6 +13,7 @@ import { loginSchema, type LoginValues } from '@/src/lib/validation';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useAppTheme } from '@/src/providers/theme-provider';
 import { GuestReceiptCard } from '@/src/components/reservations/guest-receipt-card';
+import { env } from '@/src/config/env';
 
 export default function LoginScreen() {
   const { login, sessionMessage, clearSessionMessage } = useAuth();
@@ -40,7 +41,9 @@ export default function LoginScreen() {
       )} />
       <ErrorList messages={serverErrors} />
       <AppButton label="Sign in" icon="log-in-outline" loading={isSubmitting} onPress={() => void submit()} />
-      <AppButton label="Book a reservation" icon="calendar-outline" variant="outline" onPress={() => router.push('/book-reservation')} />
+      {env.isReservationEnabled ? (
+        <AppButton label="Book a reservation" icon="calendar-outline" variant="outline" onPress={() => router.push('/book-reservation')} />
+      ) : null}
       <View style={styles.footer}>
         <Text style={{ color: colors.textMuted }}>Need to create an account?</Text>
         <Link href="/(auth)/register" asChild>

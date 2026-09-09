@@ -12,6 +12,7 @@ import { StudySkeleton } from '@/src/components/portal/study-skeleton';
 import { ScreenBackground } from '@/src/components/screen-background';
 import { ErrorList } from '@/src/components/ui/error-list';
 import { AppButton } from '@/src/components/ui/app-button';
+import { env } from '@/src/config/env';
 import { usePatientProfile, usePatientWorklist } from '@/src/hooks/use-patient-data';
 import { errorMessages } from '@/src/lib/api-client';
 import { buildSharedStudyUrl, countBy, filterStudies } from '@/src/lib/studies';
@@ -57,10 +58,12 @@ export default function PatientPortalScreen() {
         onRefresh={() => void refresh()}
         ListHeaderComponent={<View>
           <ProfileCard profile={profileQuery.data} loading={profileQuery.isPending} error={profileQuery.isError} totalStudies={studies.length} />
-          <View style={styles.portalActions}>
-            <AppButton label="Book a reservation" icon="calendar-outline" onPress={() => router.push('/book-reservation')} style={styles.portalAction} />
-            <AppButton label="My reservations" icon="list-outline" variant="outline" onPress={() => router.push('/(app)/reservations')} style={styles.portalAction} />
-          </View>
+          {env.isReservationEnabled ? (
+            <View style={styles.portalActions}>
+              <AppButton label="Book a reservation" icon="calendar-outline" onPress={() => router.push('/book-reservation')} style={styles.portalAction} />
+              <AppButton label="My reservations" icon="list-outline" variant="outline" onPress={() => router.push('/(app)/reservations')} style={styles.portalAction} />
+            </View>
+          ) : null}
           <FilterChips modalities={modalities} statuses={statuses} activeModality={modality} activeStatus={status}
             onModality={(value) => setModality((current) => current === value ? null : value)}
             onStatus={(value) => setStatus((current) => current === value ? null : value)} />
