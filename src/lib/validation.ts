@@ -21,7 +21,7 @@ export type RegistrationValues = z.infer<typeof registrationSchema>;
 export const reservationSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required.').max(200, 'First name cannot exceed 200 characters.'),
   lastName: z.string().trim().min(1, 'Last name is required.').max(200, 'Last name cannot exceed 200 characters.'),
-  countryCode: z.string().trim().regex(/^\+\d{1,3}$/, 'Enter a valid country code.'),
+  countryCode: z.string().trim().regex(/^\+\d{1,4}$/, 'Select a valid country code.'),
   phoneNumber: z.string().trim().min(1, 'Mobile number is required.').max(30, 'Mobile number cannot exceed 30 characters.').refine(
     (value) => /^[-\d\s().]+$/.test(value) && (value.match(/\d/g)?.length ?? 0) >= 6,
     'Enter a valid mobile number.',
@@ -33,7 +33,7 @@ export const reservationSchema = z.object({
     return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value && date <= new Date();
   }, 'Use a valid past date in YYYY-MM-DD format.'),
   gender: z.string().refine(
-    (value) => value === 'Male' || value === 'Female',
+    (value): boolean => value === 'Male' || value === 'Female',
     'Gender is required.',
   ),
   reasonForReservation: z.string().trim().max(2000, 'Your description cannot exceed 2000 characters.').nullable(),

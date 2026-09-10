@@ -16,33 +16,29 @@ import { WebScreenHeader } from '@/src/components/web-screen-header';
 import { env } from '@/src/config/env';
 import { usePatientProfile } from '@/src/hooks/use-patient-data';
 import { reservationSchema, type ReservationValues } from '@/src/lib/validation';
+import {
+  countryCallingCodeOptions,
+  DEFAULT_COUNTRY_CODE,
+  DEFAULT_COUNTRY_ISO,
+  getCountryCallingCode,
+  splitInternationalPhone,
+} from '@/src/lib/country-calling-codes';
 import { useAuth } from '@/src/providers/auth-provider';
 import { useGuestReceipt } from '@/src/providers/guest-receipt-provider';
 import { useAppTheme } from '@/src/providers/theme-provider';
 import { reservationsService } from '@/src/services/reservations';
 
 const submitError = 'We could not send your reservation request. Please try again.';
-const defaultCountryCode = '+20';
-
 const emptyValues: ReservationValues = {
   firstName: '',
   lastName: '',
-  countryCode: defaultCountryCode,
+  countryCode: DEFAULT_COUNTRY_CODE,
   phoneNumber: '',
   email: '',
   dateOfBirth: '',
   gender: '',
   reasonForReservation: '',
 };
-
-function getProfilePhone(phoneNumber: string | null) {
-  const value = phoneNumber?.trim() ?? '';
-  if (value.startsWith(defaultCountryCode)) {
-    return value.slice(defaultCountryCode.length).replace(/^0+/, '');
-  }
-
-  return value.replace(/^0+/, '');
-}
 
 function getProfileGender(gender: string | null) {
   const value = gender?.trim().toLowerCase();
@@ -65,6 +61,8 @@ export default function BookReservationScreen() {
   const profileQuery = usePatientProfile();
   const profileApplied = useRef(false);
   const [serverErrors, setServerErrors] = useState<string[]>([]);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [countryIso, setCountryIso] = useState(DEFAULT_COUNTRY_ISO);
   const [genderOpen, setGenderOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
 
@@ -76,15 +74,18 @@ export default function BookReservationScreen() {
   useEffect(() => {
     if (!token || !profileQuery.data || profileApplied.current) return;
     const profile = profileQuery.data;
+    const profilePhone = splitInternationalPhone(profile.phoneNumber);
     reset({
       ...emptyValues,
       firstName: profile.firstName ?? '',
       lastName: profile.lastName ?? '',
-      phoneNumber: getProfilePhone(profile.phoneNumber),
+      countryCode: profilePhone.countryCode,
+      phoneNumber: profilePhone.nationalNumber,
       email: profile.email ?? '',
       dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? '',
       gender: getProfileGender(profile.gender),
     });
+    setCountryIso(profilePhone.countryIso);
     profileApplied.current = true;
   }, [profileQuery.data, reset, token]);
 
@@ -153,8 +154,27 @@ export default function BookReservationScreen() {
               )} />
               <View style={styles.phoneRow}>
                 <View style={styles.countryCode}>
-                  <Controller control={control} name="countryCode" render={({ field: { value, onChange, onBlur } }) => (
-                    <FormField label="Country code" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.countryCode?.message} keyboardType="phone-pad" placeholder="+20" maxLength={4} returnKeyType="next" />
+                  <Controller control={control} name="countryCode" render={({ field: { onChange } }) => (
+                    <SelectField
+                      label="Country code"
+                      placeholder="Select country"
+                      value={countryIso}
+                      options={countryCallingCodeOptions}
+                      open={countryOpen}
+                      error={errors.countryCode?.message}
+                      emptyMessage="No countries match your search."
+                      searchable
+                      searchPlaceholder="Search country or code"
+                      onOpen={() => setCountryOpen(true)}
+                      onClose={() => setCountryOpen(false)}
+                      onChange={(nextIso) => {
+                        if (!nextIso) return;
+                        const country = getCountryCallingCode(nextIso);
+                        if (!country) return;
+                        setCountryIso(country.iso2);
+                        onChange(country.callingCode);
+                      }}
+                    />
                   )} />
                 </View>
                 <View style={styles.mobileNumber}>
@@ -231,7 +251,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 23, fontWeight: '800' },
   description: { fontSize: 14, lineHeight: 21, marginTop: -8 },
   phoneRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  countryCode: { width: 118 },
+  countryCode: { flex: 1.15 },
   mobileNumber: { flex: 1 },
   reasonInput: { minHeight: 100 },
 });

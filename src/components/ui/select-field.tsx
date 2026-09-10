@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/src/providers/theme-provider';
@@ -21,6 +22,8 @@ interface Props<T extends string | number> {
   onClose: () => void;
   onChange: (value: T | null) => void;
   allowClear?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 export function SelectField<T extends string | number>({
@@ -35,9 +38,20 @@ export function SelectField<T extends string | number>({
   onClose,
   onChange,
   allowClear,
+  searchable = false,
+  searchPlaceholder = 'Search options',
 }: Props<T>) {
   const { colors } = useAppTheme();
+  const [search, setSearch] = useState('');
   const selected = options.find((option) => option.value === value);
+  const normalizedSearch = search.trim().toLowerCase();
+  const visibleOptions = normalizedSearch
+    ? options.filter((option) => option.label.toLowerCase().includes(normalizedSearch))
+    : options;
+  const close = () => {
+    setSearch('');
+    onClose();
+  };
 
   return (
     <View style={styles.group}>
@@ -55,27 +69,41 @@ export function SelectField<T extends string | number>({
       </Pressable>
       {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
 
-      <Modal visible={open} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <Modal visible={open} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
         <SafeAreaView style={[styles.modal, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
           <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>{label}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Close ${label}`} onPress={onClose} style={styles.close}>
+            <Pressable accessibilityRole="button" accessibilityLabel={`Close ${label}`} onPress={close} style={styles.close}>
               <Ionicons name="close" size={24} color={colors.text} />
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.options}>
+          {searchable ? (
+            <View style={styles.searchContainer}>
+              <TextInput
+                value={search}
+                onChangeText={setSearch}
+                placeholder={searchPlaceholder}
+                placeholderTextColor={colors.textMuted}
+                autoCorrect={false}
+                autoCapitalize="none"
+                clearButtonMode="while-editing"
+                style={[styles.searchInput, { backgroundColor: colors.surfaceMuted, borderColor: colors.border, color: colors.text }]}
+              />
+            </View>
+          ) : null}
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.options}>
             {allowClear ? (
-              <OptionRow label="No preference" selected={value === null} onPress={() => { onChange(null); onClose(); }} />
+              <OptionRow label="No preference" selected={value === null} onPress={() => { onChange(null); close(); }} />
             ) : null}
-            {options.map((option) => (
+            {visibleOptions.map((option) => (
               <OptionRow
                 key={String(option.value)}
                 label={option.label}
                 selected={option.value === value}
-                onPress={() => { onChange(option.value); onClose(); }}
+                onPress={() => { onChange(option.value); close(); }}
               />
             ))}
-            {!options.length ? <Text style={[styles.empty, { color: colors.textMuted }]}>{emptyMessage}</Text> : null}
+            {!visibleOptions.length ? <Text style={[styles.empty, { color: colors.textMuted }]}>{emptyMessage}</Text> : null}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -107,6 +135,8 @@ const styles = StyleSheet.create({
   modalHeader: { minHeight: 58, paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: 'row', alignItems: 'center' },
   modalTitle: { flex: 1, fontSize: 18, fontWeight: '800' },
   close: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  searchContainer: { paddingHorizontal: 16, paddingTop: 14 },
+  searchInput: { minHeight: 48, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, fontSize: 16 },
   options: { padding: 16, gap: 10 },
   option: { minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   optionLabel: { flex: 1, fontSize: 15, fontWeight: '600' },

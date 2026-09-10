@@ -24,6 +24,7 @@ describe('reservation validation', () => {
 
   it('accepts mandatory demographics with an optional reason', () => {
     expect(reservationSchema.safeParse(valid).success).toBe(true);
+    expect(reservationSchema.safeParse({ ...valid, countryCode: '+1268' }).success).toBe(true);
   });
 
   it('rejects invalid email and dates', () => {
