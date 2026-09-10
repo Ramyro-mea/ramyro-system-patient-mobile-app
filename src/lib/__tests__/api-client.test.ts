@@ -35,7 +35,7 @@ describe('API envelope handling', () => {
   it('turns network failures into a safe user-facing error', async () => {
     jest.spyOn(global, 'fetch').mockRejectedValue(new Error('socket details'));
     await expect(requestApi('/profile')).rejects.toMatchObject({
-      messages: [expect.stringContaining('Unable to reach')],
+      messages: ['Something went wrong. Please try again.'],
     });
   });
 });

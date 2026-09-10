@@ -1,6 +1,6 @@
 import { fetch as expoFetch } from 'expo/fetch';
 
-import { ApiError, envelopeErrorMessages, notifyUnauthorized, requestApi } from '@/src/lib/api-client';
+import { ApiError, envelopeErrorMessages, genericNetworkError, notifyUnauthorized, requestApi } from '@/src/lib/api-client';
 import { createReportFile } from '@/src/lib/report-files';
 import type {
   LoginRequest,
@@ -90,9 +90,7 @@ export const patientPortalService = {
         },
       );
     } catch {
-      throw new ApiError([
-        'Unable to reach the Patient Portal server. Check your network and try again.',
-      ]);
+      throw new ApiError([genericNetworkError]);
     }
 
     if (!response.ok) {

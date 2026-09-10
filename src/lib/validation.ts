@@ -21,9 +21,10 @@ export type RegistrationValues = z.infer<typeof registrationSchema>;
 export const reservationSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required.').max(200, 'First name cannot exceed 200 characters.'),
   lastName: z.string().trim().min(1, 'Last name is required.').max(200, 'Last name cannot exceed 200 characters.'),
-  phoneNumber: z.string().trim().min(1, 'Phone number is required.').max(100, 'Phone number cannot exceed 100 characters.').refine(
-    (value) => /^[+]?[-\d\s().]+$/.test(value) && (value.match(/\d/g)?.length ?? 0) >= 7,
-    'Enter a valid phone number.',
+  countryCode: z.string().trim().regex(/^\+\d{1,3}$/, 'Enter a valid country code.'),
+  phoneNumber: z.string().trim().min(1, 'Mobile number is required.').max(30, 'Mobile number cannot exceed 30 characters.').refine(
+    (value) => /^[-\d\s().]+$/.test(value) && (value.match(/\d/g)?.length ?? 0) >= 6,
+    'Enter a valid mobile number.',
   ),
   email: z.email('Enter a valid email address.').max(256, 'Email cannot exceed 256 characters.'),
   dateOfBirth: z.string().trim().min(1, 'Date of birth is required.').refine((value) => {
@@ -31,7 +32,10 @@ export const reservationSchema = z.object({
     const date = new Date(`${value}T00:00:00Z`);
     return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value && date <= new Date();
   }, 'Use a valid past date in YYYY-MM-DD format.'),
-  gender: z.string().trim().min(1, 'Gender is required.').max(50, 'Gender cannot exceed 50 characters.'),
+  gender: z.string().refine(
+    (value) => value === 'Male' || value === 'Female',
+    'Gender is required.',
+  ),
   reasonForReservation: z.string().trim().max(2000, 'Your description cannot exceed 2000 characters.').nullable(),
 });
 

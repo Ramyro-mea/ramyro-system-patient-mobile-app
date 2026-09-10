@@ -67,7 +67,7 @@ export default function ViewerScreen() {
         onShouldStartLoadWithRequest={allowNavigation}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
-        onError={() => { setLoading(false); setError('The hosted viewer could not be loaded. Check that ports 9007 and 8002 are reachable.'); }}
+        onError={() => { setLoading(false); setError('Something went wrong. Please try again.'); }}
         onHttpError={({ nativeEvent }) => { if (nativeEvent.statusCode === 401) void expireSession(); }}
       />
       {loading ? <View pointerEvents="none" style={[styles.overlay, { backgroundColor: colors.background }]}><ActivityIndicator size="large" color={colors.primary} /><Text style={{ color: colors.textMuted }}>Loading viewer…</Text></View> : null}

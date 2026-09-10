@@ -17,7 +17,7 @@ describe('authentication validation', () => {
 
 describe('reservation validation', () => {
   const valid = {
-    firstName: 'Ramy', lastName: 'Patient', phoneNumber: '+201000000000',
+    firstName: 'Ramy', lastName: 'Patient', countryCode: '+20', phoneNumber: '1000000000',
     email: 'patient@example.com', dateOfBirth: '1990-01-02', gender: 'Male',
     reasonForReservation: null,
   };

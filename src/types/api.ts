@@ -95,6 +95,7 @@ export interface PatientVisit {
   status: string;
   createdAtUtc: string;
   scheduledAtUtc: string;
+  roomName: string | null;
   reasonForReservation: string | null;
 }
 

@@ -1,5 +1,6 @@
 export function formatCairoDateTime(value: string): string {
-  const date = new Date(value);
+  const utcValue = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : `${value}Z`;
+  const date = new Date(utcValue);
   if (Number.isNaN(date.getTime())) return value;
 
   return new Intl.DateTimeFormat('en-GB', {

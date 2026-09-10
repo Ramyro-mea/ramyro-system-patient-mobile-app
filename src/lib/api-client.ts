@@ -4,6 +4,7 @@ import type { ApiResponse } from '@/src/types/api';
 type UnauthorizedHandler = () => void | Promise<void>;
 
 let unauthorizedHandler: UnauthorizedHandler | null = null;
+export const genericNetworkError = 'Something went wrong. Please try again.';
 
 export class ApiError extends Error {
   readonly messages: string[];
@@ -71,9 +72,7 @@ export async function requestApiAt<T>(
       },
     });
   } catch {
-    throw new ApiError([
-      'Unable to reach the server. Check your network and server address.',
-    ]);
+    throw new ApiError([genericNetworkError]);
   }
 
   const envelope = await parseEnvelope<T>(response);

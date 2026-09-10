@@ -22,16 +22,40 @@ import { useAppTheme } from '@/src/providers/theme-provider';
 import { reservationsService } from '@/src/services/reservations';
 
 const submitError = 'We could not send your reservation request. Please try again.';
+const defaultCountryCode = '+20';
 
 const emptyValues: ReservationValues = {
   firstName: '',
   lastName: '',
+  countryCode: defaultCountryCode,
   phoneNumber: '',
   email: '',
   dateOfBirth: '',
   gender: '',
   reasonForReservation: '',
 };
+
+function getProfilePhone(phoneNumber: string | null) {
+  const value = phoneNumber?.trim() ?? '';
+  if (value.startsWith(defaultCountryCode)) {
+    return value.slice(defaultCountryCode.length).replace(/^0+/, '');
+  }
+
+  return value.replace(/^0+/, '');
+}
+
+function getProfileGender(gender: string | null) {
+  const value = gender?.trim().toLowerCase();
+  if (value === 'male') return 'Male';
+  if (value === 'female') return 'Female';
+  return '';
+}
+
+function buildInternationalPhone(countryCode: string, phoneNumber: string) {
+  const code = countryCode.replace(/\D/g, '');
+  const number = phoneNumber.replace(/\D/g, '').replace(/^0+/, '');
+  return `+${code}${number}`;
+}
 
 export default function BookReservationScreen() {
   const { token } = useAuth();
@@ -56,18 +80,20 @@ export default function BookReservationScreen() {
       ...emptyValues,
       firstName: profile.firstName ?? '',
       lastName: profile.lastName ?? '',
-      phoneNumber: profile.phoneNumber ?? '',
+      phoneNumber: getProfilePhone(profile.phoneNumber),
       email: profile.email ?? '',
       dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? '',
-      gender: profile.gender ?? '',
+      gender: getProfileGender(profile.gender),
     });
     profileApplied.current = true;
   }, [profileQuery.data, reset, token]);
 
   const mutation = useMutation({
     mutationFn: async (values: ReservationValues) => {
+      const { countryCode, phoneNumber, ...details } = values;
       const request = {
-        ...values,
+        ...details,
+        phoneNumber: buildInternationalPhone(countryCode, phoneNumber),
         reasonForReservation: values.reasonForReservation?.trim() || null,
         entityBranchId: env.risBranchId,
       };
@@ -125,9 +151,18 @@ export default function BookReservationScreen() {
               <Controller control={control} name="lastName" render={({ field: { value, onChange, onBlur } }) => (
                 <FormField label="Last name" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.lastName?.message} autoCapitalize="words" returnKeyType="next" />
               )} />
-              <Controller control={control} name="phoneNumber" render={({ field: { value, onChange, onBlur } }) => (
-                <FormField label="Phone number" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.phoneNumber?.message} keyboardType="phone-pad" textContentType="telephoneNumber" autoComplete="tel" returnKeyType="next" />
-              )} />
+              <View style={styles.phoneRow}>
+                <View style={styles.countryCode}>
+                  <Controller control={control} name="countryCode" render={({ field: { value, onChange, onBlur } }) => (
+                    <FormField label="Country code" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.countryCode?.message} keyboardType="phone-pad" placeholder="+20" maxLength={4} returnKeyType="next" />
+                  )} />
+                </View>
+                <View style={styles.mobileNumber}>
+                  <Controller control={control} name="phoneNumber" render={({ field: { value, onChange, onBlur } }) => (
+                    <FormField label="Mobile number" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.phoneNumber?.message} keyboardType="phone-pad" textContentType="telephoneNumber" autoComplete="tel" returnKeyType="next" />
+                  )} />
+                </View>
+              </View>
               <Controller control={control} name="email" render={({ field: { value, onChange, onBlur } }) => (
                 <FormField label="Email" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.email?.message} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} textContentType="emailAddress" autoComplete="email" returnKeyType="next" />
               )} />
@@ -150,7 +185,6 @@ export default function BookReservationScreen() {
                   options={[
                     { label: 'Male', value: 'Male' },
                     { label: 'Female', value: 'Female' },
-                    { label: 'Other', value: 'Other' },
                   ]}
                   open={genderOpen}
                   error={errors.gender?.message}
@@ -196,5 +230,8 @@ const styles = StyleSheet.create({
   card: { width: '100%', maxWidth: 560, alignSelf: 'center', borderRadius: 22, borderWidth: 1, padding: 20, gap: 16 },
   title: { fontSize: 23, fontWeight: '800' },
   description: { fontSize: 14, lineHeight: 21, marginTop: -8 },
+  phoneRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  countryCode: { width: 118 },
+  mobileNumber: { flex: 1 },
   reasonInput: { minHeight: 100 },
 });
