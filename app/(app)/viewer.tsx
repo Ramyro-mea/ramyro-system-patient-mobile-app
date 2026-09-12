@@ -23,6 +23,7 @@ export default function ViewerScreen() {
     if (!studyInstanceUID) return null;
     const url = new URL('/patientPortal/viewer', env.webUrl);
     url.searchParams.set('studyInstanceUID', studyInstanceUID);
+    url.searchParams.set('embedded', 'true');
     return url.toString();
   }, [studyInstanceUID]);
 
