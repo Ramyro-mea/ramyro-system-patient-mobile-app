@@ -12,11 +12,11 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       <AppThemeProvider>
-        <GuestReceiptProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <GuestReceiptProvider>
             <NotificationProvider>{children}</NotificationProvider>
-          </AuthProvider>
-        </GuestReceiptProvider>
+          </GuestReceiptProvider>
+        </AuthProvider>
       </AppThemeProvider>
     </QueryClientProvider>
   );

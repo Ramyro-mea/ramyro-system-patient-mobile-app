@@ -10,18 +10,16 @@ function Chip({ label, count, active, onPress }: { label: string; count: number;
   );
 }
 
-export function FilterChips({ modalities, statuses, activeModality, activeStatus, onModality, onStatus }: {
-  modalities: Record<string, number>; statuses: Record<string, number>; activeModality: string | null; activeStatus: string | null;
-  onModality: (value: string) => void; onStatus: (value: string) => void;
+export function FilterChips({ modalities, activeModality, onModality }: {
+  modalities: Record<string, number>; activeModality: string | null;
+  onModality: (value: string) => void;
 }) {
   const { colors } = useAppTheme();
   return (
     <View style={styles.container}>
       {Object.keys(modalities).length ? <><Text style={[styles.label, { color: colors.textMuted }]}>Modality</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>{Object.entries(modalities).map(([name, count]) => <Chip key={name} label={name} count={count} active={activeModality === name} onPress={() => onModality(name)} />)}</ScrollView></> : null}
-      {Object.keys(statuses).length ? <><Text style={[styles.label, { color: colors.textMuted }]}>Report status</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>{Object.entries(statuses).map(([name, count]) => <Chip key={name} label={name} count={count} active={activeStatus === name} onPress={() => onStatus(name)} />)}</ScrollView></> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({ container: { gap: 8, paddingTop: 16 }, label: { marginHorizontal: 16, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 }, row: { paddingHorizontal: 16, gap: 8 }, chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 }, chipText: { fontSize: 12, fontWeight: '700' } });
-

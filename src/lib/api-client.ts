@@ -3,6 +3,10 @@ import type { ApiResponse } from '@/src/types/api';
 
 type UnauthorizedHandler = () => void | Promise<void>;
 
+export type ApiRequestOptions = RequestInit & {
+  multipart?: boolean;
+};
+
 let unauthorizedHandler: UnauthorizedHandler | null = null;
 export const genericNetworkError = 'Something went wrong. Please try again.';
 
@@ -55,20 +59,21 @@ async function parseEnvelope<T>(response: Response): Promise<ApiResponse<T> | nu
 export async function requestApiAt<T>(
   baseUrl: string,
   path: string,
-  options: RequestInit = {},
+  options: ApiRequestOptions = {},
   token?: string,
   fallback = 'The request could not be completed.',
 ): Promise<T> {
   let response: Response;
+  const { multipart = false, ...fetchOptions } = options;
 
   try {
     response = await fetch(`${baseUrl}${path}`, {
-      ...options,
+      ...fetchOptions,
       headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json',
+        ...(multipart ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
+        ...fetchOptions.headers,
       },
     });
   } catch {
@@ -93,7 +98,7 @@ export async function requestApiAt<T>(
 
 export function requestApi<T>(
   path: string,
-  options: RequestInit = {},
+  options: ApiRequestOptions = {},
   token?: string,
   fallback?: string,
 ) {

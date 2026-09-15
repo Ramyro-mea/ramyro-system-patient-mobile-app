@@ -24,6 +24,7 @@ interface Props<T extends string | number> {
   allowClear?: boolean;
   searchable?: boolean;
   searchPlaceholder?: string;
+  disabled?: boolean;
 }
 
 export function SelectField<T extends string | number>({
@@ -40,6 +41,7 @@ export function SelectField<T extends string | number>({
   allowClear,
   searchable = false,
   searchPlaceholder = 'Search options',
+  disabled = false,
 }: Props<T>) {
   const { colors } = useAppTheme();
   const [search, setSearch] = useState('');
@@ -59,8 +61,9 @@ export function SelectField<T extends string | number>({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
+        disabled={disabled}
         onPress={onOpen}
-        style={[styles.control, { backgroundColor: colors.surfaceMuted, borderColor: error ? colors.danger : colors.border }]}
+        style={[styles.control, { backgroundColor: colors.surfaceMuted, borderColor: error ? colors.danger : colors.border, opacity: disabled ? 0.55 : 1 }]}
       >
         <Text numberOfLines={1} style={[styles.value, { color: selected ? colors.text : colors.textMuted }]}>
           {selected?.label ?? placeholder}

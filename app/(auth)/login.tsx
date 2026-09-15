@@ -16,7 +16,7 @@ import { GuestReceiptCard } from '@/src/components/reservations/guest-receipt-ca
 import { env } from '@/src/config/env';
 
 export default function LoginScreen() {
-  const { login, sessionMessage, clearSessionMessage } = useAuth();
+  const { login } = useAuth();
   const { colors } = useAppTheme();
   const [serverErrors, setServerErrors] = React.useState<string[]>([]);
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginValues>({
@@ -24,7 +24,7 @@ export default function LoginScreen() {
   });
 
   const submit = handleSubmit(async (values) => {
-    setServerErrors([]); clearSessionMessage();
+    setServerErrors([]);
     try { await login(values); }
     catch (error) { setServerErrors(errorMessages(error, 'Login failed. Please try again.')); }
   });
@@ -32,7 +32,6 @@ export default function LoginScreen() {
   return (
     <AuthShell title="Patient Portal" subtitle="Sign in to view your studies and reports.">
       <GuestReceiptCard />
-      {sessionMessage ? <ErrorList tone="info" messages={[sessionMessage]} /> : null}
       <Controller control={control} name="username" render={({ field: { value, onChange, onBlur } }) => (
         <FormField label="Username" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.username?.message} placeholder="Enter your username" autoCapitalize="none" autoCorrect={false} textContentType="username" autoComplete="username" returnKeyType="next" />
       )} />

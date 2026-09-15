@@ -19,7 +19,7 @@ describe('reservation validation', () => {
   const valid = {
     firstName: 'Ramy', lastName: 'Patient', countryCode: '+20', phoneNumber: '1000000000',
     email: 'patient@example.com', dateOfBirth: '1990-01-02', gender: 'Male',
-    reasonForReservation: null,
+    reasonForReservation: null, procedureId: null,
   };
 
   it('accepts mandatory demographics with an optional reason', () => {
@@ -32,5 +32,15 @@ describe('reservation validation', () => {
     expect(reservationSchema.safeParse({ ...valid, phoneNumber: 'call me' }).success).toBe(false);
     expect(reservationSchema.safeParse({ ...valid, dateOfBirth: '2024-02-31' }).success).toBe(false);
     expect(reservationSchema.safeParse({ ...valid, dateOfBirth: '2999-01-01' }).success).toBe(false);
+  });
+
+  it('accepts empty optional demographics and an optional procedure', () => {
+    expect(reservationSchema.safeParse({
+      ...valid,
+      email: '',
+      gender: '',
+      procedureId: 8,
+    }).success).toBe(true);
+    expect(reservationSchema.safeParse({ ...valid, procedureId: 0 }).success).toBe(false);
   });
 });

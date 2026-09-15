@@ -26,13 +26,11 @@ export default function PatientPortalScreen() {
   const profileQuery = usePatientProfile();
   const worklistQuery = usePatientWorklist();
   const [modality, setModality] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   const studies = useMemo(() => worklistQuery.data ?? [], [worklistQuery.data]);
   const modalities = useMemo(() => countBy(studies, (study) => study.modality), [studies]);
-  const statuses = useMemo(() => countBy(studies, (study) => study.reportStatus), [studies]);
-  const filtered = useMemo(() => filterStudies(studies, { modality, status }), [studies, modality, status]);
+  const filtered = useMemo(() => filterStudies(studies, { modality, status: null }), [studies, modality]);
 
   const shareMutation = useMutation({
     mutationFn: (studyInstanceUID: string) => patientPortalService.createShareLink(studyInstanceUID, token!),
@@ -64,9 +62,11 @@ export default function PatientPortalScreen() {
               <AppButton label="My reservations" icon="list-outline" variant="outline" onPress={() => router.push('/(app)/reservations')} style={styles.portalAction} />
             </View>
           ) : null}
-          <FilterChips modalities={modalities} statuses={statuses} activeModality={modality} activeStatus={status}
+          <FilterChips
+            modalities={modalities}
+            activeModality={modality}
             onModality={(value) => setModality((current) => current === value ? null : value)}
-            onStatus={(value) => setStatus((current) => current === value ? null : value)} />
+          />
           <View style={styles.sectionHeading}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent encounters</Text>
             <Text style={[styles.sectionDescription, { color: colors.textMuted }]}>Tap report or viewer for more details.</Text>
@@ -79,7 +79,7 @@ export default function PatientPortalScreen() {
           onViewer={() => item.studyInstanceUID && router.push({ pathname: '/(app)/viewer', params: { studyInstanceUID: item.studyInstanceUID } })}
           onShare={() => item.studyInstanceUID && shareMutation.mutate(item.studyInstanceUID)}
           sharing={shareMutation.isPending && shareMutation.variables === item.studyInstanceUID} />}
-        ListEmptyComponent={worklistQuery.isPending ? <View style={styles.skeletons}><StudySkeleton /><StudySkeleton /><StudySkeleton /></View> : !worklistQuery.isError ? <View style={styles.empty}><Text style={[styles.emptyTitle, { color: colors.text }]}>No studies found</Text><Text style={{ color: colors.textMuted }}>{modality || status ? 'Clear a filter to see other encounters.' : 'There are no recent imaging encounters to display.'}</Text></View> : null}
+        ListEmptyComponent={worklistQuery.isPending ? <View style={styles.skeletons}><StudySkeleton /><StudySkeleton /><StudySkeleton /></View> : !worklistQuery.isError ? <View style={styles.empty}><Text style={[styles.emptyTitle, { color: colors.text }]}>No studies found</Text><Text style={{ color: colors.textMuted }}>{modality ? 'Clear a filter to see other encounters.' : 'There are no recent imaging encounters to display.'}</Text></View> : null}
         ListFooterComponent={<View style={{ height: 28 }} />}
       />
       <ShareLinkModal url={shareUrl} onClose={() => setShareUrl(null)} />

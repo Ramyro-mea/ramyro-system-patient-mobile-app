@@ -79,10 +79,32 @@ export interface CreateMobileVisitRequest {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  email: string;
+  email: string | null;
   dateOfBirth: string;
-  gender: string;
+  gender: string | null;
   reasonForReservation: string | null;
+  procedureId: number | null;
+}
+
+export interface MobileProcedureOption {
+  procedureId: number;
+  modalityId: number;
+  modalityDisplayName: string;
+  procedureDisplayName: string;
+  procedureCode: string | null;
+}
+
+export interface RisPrerequisite {
+  id: number;
+  ruleId: number | null;
+  type: number | string;
+  subTypeId: number | null;
+  subTypeCode: string | null;
+  subTypeName: string | null;
+  name: string;
+  isRequired: boolean;
+  requiredGender: string | null;
+  description: string | null;
 }
 
 export interface PatientVisit {
@@ -97,8 +119,31 @@ export interface PatientVisit {
   scheduledAtUtc: string;
   roomName: string | null;
   reasonForReservation: string | null;
+  totalPrice: number | null;
+  currencyCode: string | null;
+  currencySymbol: string | null;
+  isPaid: boolean | null;
 }
 
 export interface GuestReservationReceipt {
+  visitId: number;
+  orderId: number | null;
   submittedAtUtc: string;
+  procedureId: number | null;
+  procedureDisplayName: string | null;
+}
+
+export type BookingAttachmentSource = 'camera' | 'file';
+export type BookingAttachmentStatus = 'pending' | 'uploading' | 'uploaded' | 'failed';
+
+export interface PendingBookingAttachment {
+  id: string;
+  uri: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number | null;
+  source: BookingAttachmentSource;
+  status: BookingAttachmentStatus;
+  error: string | null;
+  webFile?: Blob;
 }

@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { AppButton } from '@/src/components/ui/app-button';
 import { formatCairoDateTime } from '@/src/lib/date-time';
+import { formatOrderPrice } from '@/src/lib/reservation-pricing';
 import { useAppTheme } from '@/src/providers/theme-provider';
 import type { PatientVisit } from '@/src/types/api';
 
@@ -25,13 +27,22 @@ function statusColors(status: string, colors: ReturnType<typeof useAppTheme>['co
   return { foreground: colors.warning, background: colors.warningSurface };
 }
 
-export function PatientVisitCard({ visit }: { visit: PatientVisit }) {
+export function PatientVisitCard({
+  visit,
+  onShowQrCode,
+  onShowPrerequisites,
+}: {
+  visit: PatientVisit;
+  onShowQrCode: () => void;
+  onShowPrerequisites?: () => void;
+}) {
   const { colors } = useAppTheme();
   const badge = statusColors(visit.status, colors);
   const hasOrder = visit.orderId !== null;
   const title = hasOrder ? (visit.procedure ?? 'Scheduled procedure') : 'Reservation request';
-  const timestamp = hasOrder ? visit.scheduledAtUtc : visit.createdAtUtc;
-  const timestampLabel = hasOrder ? 'Scheduled at' : 'Registered at';
+  const isScheduled = visit.status === 'Scheduled';
+  const timestamp = isScheduled ? visit.scheduledAtUtc : visit.createdAtUtc;
+  const timestampLabel = isScheduled ? 'Scheduled at' : 'Requested at';
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -69,6 +80,15 @@ export function PatientVisitCard({ visit }: { visit: PatientVisit }) {
             <Text style={[styles.detailText, { color: colors.text }]}>{visit.roomName}</Text>
           </View>
         ) : null}
+
+        {visit.totalPrice != null ? (
+          <View style={styles.infoRow}>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Price</Text>
+            <Text style={[styles.priceText, { color: colors.text }]}>
+              {formatOrderPrice(visit.totalPrice, visit.currencySymbol, visit.currencyCode)}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       {visit.reasonForReservation ? (
@@ -77,6 +97,25 @@ export function PatientVisitCard({ visit }: { visit: PatientVisit }) {
           <Text style={[styles.reasonText, { color: colors.text }]}>{visit.reasonForReservation}</Text>
         </View>
       ) : null}
+
+      <View style={[styles.actions, { borderTopColor: colors.border }]}>
+        <AppButton
+          style={styles.actionButton}
+          label="Show QR code"
+          icon="qr-code-outline"
+          variant="outline"
+          onPress={onShowQrCode}
+        />
+        {visit.procedureId !== null && onShowPrerequisites ? (
+          <AppButton
+            style={styles.actionButton}
+            label="Prerequisites"
+            icon="list-outline"
+            variant="outline"
+            onPress={onShowPrerequisites}
+          />
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -105,6 +144,9 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 10, lineHeight: 13, fontWeight: '800', textAlign: 'center' },
   detailLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
   detailText: { flex: 1, fontSize: 12, lineHeight: 17, textAlign: 'right' },
+  priceText: { flex: 1, fontSize: 14, lineHeight: 18, fontWeight: '800', textAlign: 'right' },
   reason: { gap: 5 },
   reasonText: { fontSize: 13, lineHeight: 19 },
+  actions: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, flexDirection: 'row', gap: 8 },
+  actionButton: { flex: 1, paddingHorizontal: 8 },
 });

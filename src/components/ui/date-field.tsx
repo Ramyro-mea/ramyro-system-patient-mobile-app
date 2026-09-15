@@ -1,5 +1,6 @@
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { formatDateOnly, parseDateOnly } from '@/src/lib/date-time';
@@ -26,10 +27,27 @@ export function DateField({
 }: Props) {
   const { colors } = useAppTheme();
   const selectedDate = parseDateOnly(value) ?? new Date(1990, 0, 1, 12);
+  const [draftDate, setDraftDate] = useState(
+    () => parseDateOnly(value) ?? new Date(1990, 0, 1, 12),
+  );
+
+  useEffect(() => {
+    if (open) setDraftDate(parseDateOnly(value) ?? new Date(1990, 0, 1, 12));
+  }, [open, value]);
 
   const handleChange = (event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS !== 'ios') onClose();
+    if (Platform.OS === 'ios') {
+      if (event.type === 'set' && date) setDraftDate(date);
+      return;
+    }
+
+    onClose();
     if (event.type === 'set' && date) onChange(formatDateOnly(date));
+  };
+
+  const confirmIosDate = () => {
+    onChange(formatDateOnly(draftDate));
+    onClose();
   };
 
   return (
@@ -55,14 +73,14 @@ export function DateField({
       {open ? (
         <View style={styles.picker}>
           <DateTimePicker
-            value={selectedDate}
+            value={Platform.OS === 'ios' ? draftDate : selectedDate}
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             maximumDate={new Date()}
             onChange={handleChange}
           />
           {Platform.OS === 'ios' ? (
-            <Pressable accessibilityRole="button" onPress={onClose} style={styles.done}>
+            <Pressable accessibilityRole="button" onPress={confirmIosDate} style={styles.done}>
               <Text style={[styles.doneText, { color: colors.primary }]}>Done</Text>
             </Pressable>
           ) : null}

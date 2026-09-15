@@ -32,6 +32,7 @@ const baseStudy: PatientWorklistItem = {
 describe('StudyCard actions', () => {
   it('disables report, viewer, and share when the requirements are absent', () => {
     const screen = render(<StudyCard study={baseStudy} onReport={jest.fn()} onViewer={jest.fn()} onShare={jest.fn()} />);
+    expect(screen.queryByText('ID: 44')).toBeNull();
     expect(screen.getByLabelText('Report').props.accessibilityState.disabled).toBe(true);
     expect(screen.getByLabelText('Viewer').props.accessibilityState.disabled).toBe(true);
     expect(screen.getByLabelText('Share').props.accessibilityState.disabled).toBe(true);

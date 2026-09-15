@@ -26,17 +26,21 @@ export const reservationSchema = z.object({
     (value) => /^[-\d\s().]+$/.test(value) && (value.match(/\d/g)?.length ?? 0) >= 6,
     'Enter a valid mobile number.',
   ),
-  email: z.email('Enter a valid email address.').max(256, 'Email cannot exceed 256 characters.'),
+  email: z.string().trim().max(256, 'Email cannot exceed 256 characters.').refine(
+    (value) => value.length === 0 || z.email().safeParse(value).success,
+    'Enter a valid email address.',
+  ),
   dateOfBirth: z.string().trim().min(1, 'Date of birth is required.').refine((value) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
     const date = new Date(`${value}T00:00:00Z`);
     return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value && date <= new Date();
   }, 'Use a valid past date in YYYY-MM-DD format.'),
   gender: z.string().refine(
-    (value): boolean => value === 'Male' || value === 'Female',
-    'Gender is required.',
+    (value): boolean => value === '' || value === 'Male' || value === 'Female',
+    'Select a valid gender.',
   ),
   reasonForReservation: z.string().trim().max(2000, 'Your description cannot exceed 2000 characters.').nullable(),
+  procedureId: z.number().int().positive().nullable(),
 });
 
 export type ReservationValues = z.infer<typeof reservationSchema>;
