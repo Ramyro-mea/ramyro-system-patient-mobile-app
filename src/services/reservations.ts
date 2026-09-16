@@ -10,6 +10,50 @@ import type {
   RisPrerequisite,
 } from '@/src/types/api';
 
+type RawPatientVisit = PatientVisit & {
+  orderTotalPrice?: unknown;
+  TotalPrice?: unknown;
+  OrderTotalPrice?: unknown;
+  DepositedAmount?: unknown;
+  CurrencyCode?: unknown;
+  CurrencySymbol?: unknown;
+};
+
+function finiteAmount(...values: unknown[]) {
+  for (const value of values) {
+    if (value === null || value === undefined || value === '') continue;
+    const amount = Number(value);
+    if (Number.isFinite(amount)) return amount;
+  }
+  return null;
+}
+
+function optionalString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+function normalizePatientVisit(raw: RawPatientVisit): PatientVisit {
+  const totalPrice = finiteAmount(
+    raw.totalPrice,
+    raw.orderTotalPrice,
+    raw.TotalPrice,
+    raw.OrderTotalPrice,
+  );
+
+  return {
+    ...raw,
+    totalPrice,
+    depositedAmount: totalPrice === null
+      ? null
+      : finiteAmount(raw.depositedAmount, raw.DepositedAmount) ?? 0,
+    currencyCode: optionalString(raw.currencyCode, raw.CurrencyCode),
+    currencySymbol: optionalString(raw.currencySymbol, raw.CurrencySymbol),
+  };
+}
+
 export const reservationsService = {
   createGuest(request: CreateMobileVisitRequest) {
     const { patientId: _patientId, ...guestRequest } = request;
@@ -22,24 +66,26 @@ export const reservationsService = {
     );
   },
 
-  create(request: CreateMobileVisitRequest, token: string) {
-    return requestApiAt<PatientVisit>(
+  async create(request: CreateMobileVisitRequest, token: string) {
+    const visit = await requestApiAt<RawPatientVisit>(
       env.risApiUrl,
       '/api/patient/bookings/mobile-request',
       { method: 'POST', body: JSON.stringify(request) },
       token,
       'The reservation request could not be submitted.',
     );
+    return normalizePatientVisit(visit);
   },
 
-  getVisits(token: string) {
-    return requestApiAt<PatientVisit[]>(
+  async getVisits(token: string) {
+    const visits = await requestApiAt<RawPatientVisit[]>(
       env.risApiUrl,
       '/api/patient/bookings/visits',
       {},
       token,
       'Your reservations could not be loaded.',
     );
+    return visits.map(normalizePatientVisit);
   },
 
   getProcedureOptions() {
@@ -64,12 +110,12 @@ export const reservationsService = {
 
   uploadDocument(
     visitId: number,
-    orderId: number,
+    orderId: number | null,
     attachment: PendingBookingAttachment,
     token?: string,
   ) {
     const form = new FormData();
-    form.append('orderId', String(orderId));
+    if (orderId !== null) form.append('orderId', String(orderId));
     if (attachment.webFile) {
       const uploadBlob = attachment.webFile.type === attachment.mimeType
         ? attachment.webFile

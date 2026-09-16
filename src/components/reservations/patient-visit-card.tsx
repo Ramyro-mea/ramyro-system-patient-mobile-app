@@ -8,20 +8,7 @@ import { useAppTheme } from '@/src/providers/theme-provider';
 import type { PatientVisit } from '@/src/types/api';
 
 function statusColors(status: string, colors: ReturnType<typeof useAppTheme>['colors']) {
-  if (status === 'Cancelled') return { foreground: colors.danger, background: colors.dangerSurface };
-  if (
-    status === 'StudyCreationCompleted'
-    || status === 'StudyCreated'
-    || status === 'ScanDone'
-    || status === 'Admitted'
-  ) {
-    return { foreground: colors.success, background: colors.successSurface };
-  }
-  if (
-    status === 'ReadyForAdmission'
-    || status === 'StudyCreationPending'
-    || status === 'Scheduled'
-  ) {
+  if (status === 'Scheduled') {
     return { foreground: colors.primary, background: colors.surface };
   }
   return { foreground: colors.warning, background: colors.warningSurface };
@@ -82,12 +69,20 @@ export function PatientVisitCard({
         ) : null}
 
         {visit.totalPrice != null ? (
-          <View style={styles.infoRow}>
-            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Price</Text>
-            <Text style={[styles.priceText, { color: colors.text }]}>
-              {formatOrderPrice(visit.totalPrice, visit.currencySymbol, visit.currencyCode)}
-            </Text>
-          </View>
+          <>
+            <View style={styles.infoRow}>
+              <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Total price</Text>
+              <Text style={[styles.priceText, { color: colors.text }]}>
+                {formatOrderPrice(visit.totalPrice, visit.currencySymbol, visit.currencyCode)}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Deposited amount</Text>
+              <Text style={[styles.priceText, { color: colors.text }]}>
+                {formatOrderPrice(visit.depositedAmount, visit.currencySymbol, visit.currencyCode)}
+              </Text>
+            </View>
+          </>
         ) : null}
       </View>
 

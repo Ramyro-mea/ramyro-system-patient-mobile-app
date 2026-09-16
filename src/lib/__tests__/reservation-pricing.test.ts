@@ -17,6 +17,7 @@ const baseVisit: PatientVisit = {
   roomName: null,
   reasonForReservation: null,
   totalPrice: 125,
+  depositedAmount: 0,
   currencyCode: 'EGP',
   currencySymbol: '$',
   isPaid: true,
@@ -26,8 +27,8 @@ describe('reservation pricing', () => {
   it('keeps all rows by default and filters only classified order rows', () => {
     const visits = [
       baseVisit,
-      { ...baseVisit, visitId: 28, isPaid: false, totalPrice: null },
-      { ...baseVisit, visitId: 29, orderId: null, isPaid: null, totalPrice: null },
+      { ...baseVisit, visitId: 28, isPaid: false, totalPrice: null, depositedAmount: null },
+      { ...baseVisit, visitId: 29, orderId: null, isPaid: null, totalPrice: null, depositedAmount: null },
     ];
 
     expect(filterPatientVisitsByPayment(visits, '')).toHaveLength(3);
@@ -38,5 +39,6 @@ describe('reservation pricing', () => {
   it('uses the currency symbol and falls back to the currency code', () => {
     expect(formatOrderPrice(125, '$', 'EGP')).toBe('$ 125.00');
     expect(formatOrderPrice(125, null, 'EGP')).toBe('EGP 125.00');
+    expect(formatOrderPrice(0, null, 'EGP')).toBe('EGP 0.00');
   });
 });

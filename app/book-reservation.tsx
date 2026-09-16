@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BookingAttachmentsField } from '@/src/components/reservations/booking-attachments-field';
@@ -171,15 +171,6 @@ export default function BookReservationScreen() {
     candidates: PendingBookingAttachment[],
   ) => {
     if (candidates.length === 0) return true;
-    if (booking.orderId === null) {
-      const message = 'The reservation order was not returned.';
-      setAttachments((current) => current.map((attachment) => (
-        candidates.some((candidate) => candidate.id === attachment.id)
-          ? { ...attachment, status: 'failed', error: message }
-          : attachment
-      )));
-      return false;
-    }
 
     let succeeded = true;
     for (const candidate of candidates) {
@@ -214,22 +205,7 @@ export default function BookReservationScreen() {
   };
 
   const clearProcedure = () => {
-    const clear = () => {
-      setAttachments([]);
-      setValue('procedureId', null, { shouldValidate: true });
-    };
-    if (attachments.length === 0) {
-      clear();
-      return;
-    }
-    Alert.alert(
-      'Clear procedure?',
-      'The selected documents will also be removed.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Clear', style: 'destructive', onPress: clear },
-      ],
-    );
+    setValue('procedureId', null, { shouldValidate: true });
   };
 
   const submit = handleSubmit(async (values) => {
@@ -467,14 +443,12 @@ export default function BookReservationScreen() {
                 </View>
               ) : null}
 
-              {procedureId !== null ? (
-                <BookingAttachmentsField
-                  attachments={attachments}
-                  disabled={Boolean(completedBooking) || isSubmitting || mutation.isPending || retryingUploads}
-                  onChange={setAttachments}
-                  onBusyChange={setAttachmentPickerBusy}
-                />
-              ) : null}
+              <BookingAttachmentsField
+                attachments={attachments}
+                disabled={Boolean(completedBooking) || isSubmitting || mutation.isPending || retryingUploads}
+                onChange={setAttachments}
+                onBusyChange={setAttachmentPickerBusy}
+              />
 
               {!uploadingAttachments ? <ErrorList messages={serverErrors} /> : null}
               {completedBooking ? (

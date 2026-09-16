@@ -120,6 +120,7 @@ export interface PatientVisit {
   roomName: string | null;
   reasonForReservation: string | null;
   totalPrice: number | null;
+  depositedAmount: number | null;
   currencyCode: string | null;
   currencySymbol: string | null;
   isPaid: boolean | null;

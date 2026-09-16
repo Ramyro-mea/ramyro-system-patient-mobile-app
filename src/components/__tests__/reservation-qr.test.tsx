@@ -51,6 +51,7 @@ const visit: PatientVisit = {
   roomName: null,
   reasonForReservation: null,
   totalPrice: null,
+  depositedAmount: null,
   currencyCode: null,
   currencySymbol: null,
   isPaid: null,
@@ -111,21 +112,25 @@ describe('reservation QR presentation', () => {
     expect(onShowPrerequisites).toHaveBeenCalledTimes(1);
   });
 
-  it('shows an available price and hides a missing price', () => {
+  it('shows stored total and zero deposit and hides missing financials', () => {
     const pricedScreen = render(
       <PatientVisitCard
-        visit={{ ...visit, orderId: 4, totalPrice: 125, currencyCode: 'USD', currencySymbol: '$', isPaid: true }}
+        visit={{ ...visit, orderId: 4, totalPrice: 125, depositedAmount: 0, currencyCode: 'USD', currencySymbol: '$', isPaid: true }}
         onShowQrCode={jest.fn()}
       />,
     );
 
+    expect(pricedScreen.getByText('Total price')).toBeTruthy();
     expect(pricedScreen.getByText('$ 125.00')).toBeTruthy();
+    expect(pricedScreen.getByText('Deposited amount')).toBeTruthy();
+    expect(pricedScreen.getByText('$ 0.00')).toBeTruthy();
     pricedScreen.unmount();
 
     const unpricedScreen = render(
       <PatientVisitCard visit={visit} onShowQrCode={jest.fn()} />,
     );
-    expect(unpricedScreen.queryByText('Price')).toBeNull();
+    expect(unpricedScreen.queryByText('Total price')).toBeNull();
+    expect(unpricedScreen.queryByText('Deposited amount')).toBeNull();
   });
 
   it('shows the selected visit in the QR modal and closes it', () => {

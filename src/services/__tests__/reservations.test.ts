@@ -61,6 +61,7 @@ describe('reservation requests', () => {
       roomName: null,
       reasonForReservation: null,
       totalPrice: 115,
+      depositedAmount: 25,
       currencyCode: 'EGP',
       currencySymbol: null,
       isPaid: true,
@@ -77,6 +78,23 @@ describe('reservation requests', () => {
       .toBe('Bearer patient-token');
     expect(String(fetchMock.mock.calls[1][0]))
       .toBe(`${env.risApiUrl}/api/patient/bookings/visits`);
+  });
+
+  it('normalizes persisted order amounts returned as runtime strings or aliases', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(successful([{
+      visitId: 27,
+      orderId: 91,
+      status: 'Scheduled',
+      orderTotalPrice: '2736',
+      depositedAmount: null,
+      currencyCode: 'EGP',
+    }]));
+
+    const visits = await reservationsService.getVisits('patient-token');
+
+    expect(visits[0].totalPrice).toBe(2736);
+    expect(visits[0].depositedAmount).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('loads joined procedure options for the configured branch', async () => {
@@ -120,7 +138,29 @@ describe('reservation requests', () => {
       `${env.risApiUrl}/api/patient/bookings/visits/27/documents/upload?tenantId=${env.risTenantId}`,
     );
     expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get('orderId')).toBe('91');
     expect((init?.headers as Record<string, string>)['Content-Type']).toBeUndefined();
     expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer patient-token');
+  });
+
+  it('omits orderId when uploading a visit-level booking document', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(successful(43));
+
+    await reservationsService.uploadDocument(28, null, {
+      id: 'document-2',
+      uri: 'file:///visit-document.pdf',
+      fileName: 'visit-document.pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 2048,
+      source: 'file',
+      status: 'pending',
+      error: null,
+      webFile: new Blob(['test pdf'], { type: 'application/pdf' }),
+    });
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get('orderId')).toBeNull();
+    expect((init?.headers as Record<string, string>)['Content-Type']).toBeUndefined();
   });
 });

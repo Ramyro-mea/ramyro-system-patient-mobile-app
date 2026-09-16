@@ -13,11 +13,13 @@ export function filterPatientVisitsByPayment(
 }
 
 export function formatOrderPrice(
-  totalPrice: number,
+  totalPrice: number | string | null | undefined,
   currencySymbol: string | null,
   currencyCode: string | null,
 ) {
-  const formattedAmount = totalPrice.toLocaleString(undefined, {
+  const numericAmount = Number(totalPrice);
+  const safeAmount = Number.isFinite(numericAmount) ? numericAmount : 0;
+  const formattedAmount = safeAmount.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
