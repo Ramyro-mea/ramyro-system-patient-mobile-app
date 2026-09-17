@@ -124,6 +124,7 @@ export interface PatientVisit {
   currencyCode: string | null;
   currencySymbol: string | null;
   isPaid: boolean | null;
+  paymentStatus: 'Paid' | 'PartiallyPaid' | 'Unpaid' | null;
 }
 
 export interface GuestReservationReceipt {

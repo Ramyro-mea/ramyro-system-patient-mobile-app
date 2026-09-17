@@ -4,16 +4,20 @@ import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useAppTheme } from '@/src/providers/theme-provider';
-import type { ReservationPaymentFilter } from '@/src/lib/reservation-pricing';
+import {
+  getReservationPaymentFilterLabel,
+  type ReservationPaymentFilter,
+} from '@/src/lib/reservation-pricing';
 
 const options: { label: string; value: ReservationPaymentFilter }[] = [
   { label: 'All', value: '' },
   { label: 'Paid', value: 'paid' },
+  { label: 'Partially paid', value: 'partially-paid' },
   { label: 'Unpaid', value: 'unpaid' },
 ];
 
 function selectedLabel(value: ReservationPaymentFilter) {
-  return options.find((option) => option.value === value)?.label ?? 'All';
+  return getReservationPaymentFilterLabel(value);
 }
 
 function FilterTrigger({ value }: { value: ReservationPaymentFilter }) {
@@ -33,7 +37,9 @@ function FilterTrigger({ value }: { value: ReservationPaymentFilter }) {
       ]}
     >
       <Ionicons name="filter-outline" size={15} color={value ? colors.primary : colors.textMuted} />
-      <Text style={[styles.triggerText, { color: colors.text }]}>{selectedLabel(value)}</Text>
+      <Text numberOfLines={1} style={[styles.triggerText, { color: colors.text }]}>
+        {selectedLabel(value)}
+      </Text>
       <Ionicons name="chevron-down" size={15} color={colors.textMuted} />
     </View>
   );
@@ -116,7 +122,7 @@ export function PaymentFilterMenu({
 
 const styles = StyleSheet.create({
   trigger: {
-    minWidth: 104,
+    width: 154,
     height: 38,
     borderWidth: 1,
     borderRadius: 999,
@@ -126,13 +132,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 7,
   },
-  triggerText: { fontSize: 13, lineHeight: 17, fontWeight: '700' },
+  triggerText: { flexShrink: 0, fontSize: 13, lineHeight: 17, fontWeight: '700' },
   webContainer: { position: 'relative', zIndex: 20 },
   webMenu: {
     position: 'absolute',
     top: 43,
     right: 0,
-    width: 150,
+    width: 170,
     borderWidth: 1,
     borderRadius: 12,
     padding: 5,

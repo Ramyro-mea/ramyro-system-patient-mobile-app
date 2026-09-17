@@ -21,19 +21,22 @@ const baseVisit: PatientVisit = {
   currencyCode: 'EGP',
   currencySymbol: '$',
   isPaid: true,
+  paymentStatus: 'Paid',
 };
 
 describe('reservation pricing', () => {
   it('keeps all rows by default and filters only classified order rows', () => {
     const visits = [
       baseVisit,
-      { ...baseVisit, visitId: 28, isPaid: false, totalPrice: null, depositedAmount: null },
-      { ...baseVisit, visitId: 29, orderId: null, isPaid: null, totalPrice: null, depositedAmount: null },
+      { ...baseVisit, visitId: 28, isPaid: null, paymentStatus: 'PartiallyPaid' as const, depositedAmount: 25 },
+      { ...baseVisit, visitId: 29, isPaid: false, paymentStatus: 'Unpaid' as const, depositedAmount: 0 },
+      { ...baseVisit, visitId: 30, orderId: null, isPaid: null, paymentStatus: null, totalPrice: null, depositedAmount: null },
     ];
 
-    expect(filterPatientVisitsByPayment(visits, '')).toHaveLength(3);
+    expect(filterPatientVisitsByPayment(visits, '')).toHaveLength(4);
     expect(filterPatientVisitsByPayment(visits, 'paid').map((visit) => visit.visitId)).toEqual([27]);
-    expect(filterPatientVisitsByPayment(visits, 'unpaid').map((visit) => visit.visitId)).toEqual([28]);
+    expect(filterPatientVisitsByPayment(visits, 'partially-paid').map((visit) => visit.visitId)).toEqual([28]);
+    expect(filterPatientVisitsByPayment(visits, 'unpaid').map((visit) => visit.visitId)).toEqual([29]);
   });
 
   it('uses the currency symbol and falls back to the currency code', () => {

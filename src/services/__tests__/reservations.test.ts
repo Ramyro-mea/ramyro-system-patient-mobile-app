@@ -64,7 +64,8 @@ describe('reservation requests', () => {
       depositedAmount: 25,
       currencyCode: 'EGP',
       currencySymbol: null,
-      isPaid: true,
+      isPaid: null,
+      paymentStatus: 'PartiallyPaid',
     };
     const fetchMock = jest.spyOn(global, 'fetch')
       .mockResolvedValueOnce(successful(visit))
@@ -94,6 +95,7 @@ describe('reservation requests', () => {
 
     expect(visits[0].totalPrice).toBe(2736);
     expect(visits[0].depositedAmount).toBe(0);
+    expect(visits[0].paymentStatus).toBe('Unpaid');
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

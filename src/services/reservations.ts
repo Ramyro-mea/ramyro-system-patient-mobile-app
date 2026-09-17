@@ -17,6 +17,7 @@ type RawPatientVisit = PatientVisit & {
   DepositedAmount?: unknown;
   CurrencyCode?: unknown;
   CurrencySymbol?: unknown;
+  PaymentStatus?: unknown;
 };
 
 function finiteAmount(...values: unknown[]) {
@@ -35,6 +36,31 @@ function optionalString(...values: unknown[]) {
   return null;
 }
 
+function normalizePaymentStatus(
+  rawStatus: unknown,
+  totalPrice: number | null,
+  depositedAmount: number | null,
+  isPaid: boolean | null,
+): PatientVisit['paymentStatus'] {
+  if (typeof rawStatus === 'string') {
+    const normalized = rawStatus.replace(/[\s_-]/g, '').toLowerCase();
+    if (normalized === 'paid') return 'Paid';
+    if (normalized === 'partiallypaid') return 'PartiallyPaid';
+    if (normalized === 'unpaid') return 'Unpaid';
+  }
+
+  if (totalPrice !== null) {
+    const deposit = depositedAmount ?? 0;
+    if (totalPrice <= 0 || deposit >= totalPrice) return 'Paid';
+    if (deposit > 0) return 'PartiallyPaid';
+    return 'Unpaid';
+  }
+
+  if (isPaid === true) return 'Paid';
+  if (isPaid === false) return 'Unpaid';
+  return null;
+}
+
 function normalizePatientVisit(raw: RawPatientVisit): PatientVisit {
   const totalPrice = finiteAmount(
     raw.totalPrice,
@@ -43,14 +69,22 @@ function normalizePatientVisit(raw: RawPatientVisit): PatientVisit {
     raw.OrderTotalPrice,
   );
 
+  const depositedAmount = totalPrice === null
+    ? null
+    : finiteAmount(raw.depositedAmount, raw.DepositedAmount) ?? 0;
+
   return {
     ...raw,
     totalPrice,
-    depositedAmount: totalPrice === null
-      ? null
-      : finiteAmount(raw.depositedAmount, raw.DepositedAmount) ?? 0,
+    depositedAmount,
     currencyCode: optionalString(raw.currencyCode, raw.CurrencyCode),
     currencySymbol: optionalString(raw.currencySymbol, raw.CurrencySymbol),
+    paymentStatus: normalizePaymentStatus(
+      raw.paymentStatus ?? raw.PaymentStatus,
+      totalPrice,
+      depositedAmount,
+      raw.isPaid,
+    ),
   };
 }
 

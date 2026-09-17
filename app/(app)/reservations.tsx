@@ -14,6 +14,7 @@ import { WebScreenHeader } from '@/src/components/web-screen-header';
 import { usePatientVisits } from '@/src/hooks/use-reservations';
 import {
   filterPatientVisitsByPayment,
+  getReservationPaymentFilterLabel,
   type ReservationPaymentFilter,
 } from '@/src/lib/reservation-pricing';
 import { useAppTheme } from '@/src/providers/theme-provider';
@@ -31,6 +32,7 @@ export default function ReservationsScreen() {
   const errors = visitsQuery.isError
     ? ['We could not load your reservations. Please try again.']
     : [];
+  const paymentFilterLabel = getReservationPaymentFilterLabel(paymentFilter).toLowerCase();
 
   return (
     <ScreenBackground>
@@ -61,11 +63,11 @@ export default function ReservationsScreen() {
         ListEmptyComponent={!visitsQuery.isPending && !visitsQuery.isError ? (
           <View style={styles.empty}>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              {paymentFilter ? `No ${paymentFilter} reservations` : 'No reservation requests'}
+              {paymentFilter ? `No ${paymentFilterLabel} reservations` : 'No reservation requests'}
             </Text>
             <Text style={[styles.emptyText, { color: colors.textMuted }]}>
               {paymentFilter
-                ? `You do not have any ${paymentFilter} reservations.`
+                ? `You do not have any ${paymentFilterLabel} reservations.`
                 : 'Your submitted reservation requests will appear here.'}
             </Text>
           </View>

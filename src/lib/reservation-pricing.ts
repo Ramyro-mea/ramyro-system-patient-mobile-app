@@ -1,6 +1,13 @@
 import type { PatientVisit } from '@/src/types/api';
 
-export type ReservationPaymentFilter = '' | 'paid' | 'unpaid';
+export type ReservationPaymentFilter = '' | 'paid' | 'partially-paid' | 'unpaid';
+
+export function getReservationPaymentFilterLabel(filter: ReservationPaymentFilter) {
+  if (filter === 'paid') return 'Paid';
+  if (filter === 'partially-paid') return 'Partially paid';
+  if (filter === 'unpaid') return 'Unpaid';
+  return 'All';
+}
 
 export function filterPatientVisitsByPayment(
   visits: PatientVisit[],
@@ -8,8 +15,12 @@ export function filterPatientVisitsByPayment(
 ) {
   if (!filter) return visits;
 
-  const isPaid = filter === 'paid';
-  return visits.filter((visit) => visit.isPaid === isPaid);
+  const status = filter === 'paid'
+    ? 'Paid'
+    : filter === 'partially-paid'
+      ? 'PartiallyPaid'
+      : 'Unpaid';
+  return visits.filter((visit) => visit.paymentStatus === status);
 }
 
 export function formatOrderPrice(

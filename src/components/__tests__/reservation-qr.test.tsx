@@ -55,6 +55,7 @@ const visit: PatientVisit = {
   currencyCode: null,
   currencySymbol: null,
   isPaid: null,
+  paymentStatus: null,
 };
 
 describe('reservation QR presentation', () => {

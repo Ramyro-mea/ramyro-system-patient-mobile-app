@@ -39,8 +39,8 @@ describe('PaymentFilterMenu', () => {
     const screen = render(<PaymentFilterMenu value="paid" onChange={onChange} />);
 
     expect(screen.getByLabelText('Payment filter: Paid')).toBeTruthy();
-    fireEvent.press(screen.getByLabelText('Select Unpaid'));
-    expect(onChange).toHaveBeenCalledWith('unpaid');
+    fireEvent.press(screen.getByLabelText('Select Partially paid'));
+    expect(onChange).toHaveBeenCalledWith('partially-paid');
   });
 
   it('maps the All menu action to the empty filter value', () => {
