@@ -224,6 +224,11 @@ export const countryCallingCodeOptions = countryCallingCodes.map((country) => ({
   value: country.iso2,
 }));
 
+export const countryOptions = countryCallingCodes.map((country) => ({
+  label: country.country,
+  value: country.iso2,
+}));
+
 export function getCountryCallingCode(iso2: string) {
   return countryCallingCodes.find((country) => country.iso2 === iso2);
 }

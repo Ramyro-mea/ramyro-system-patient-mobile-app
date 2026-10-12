@@ -12,7 +12,7 @@ function formatDate(value: string | null) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 function formatGender(value: string | null) {
-  return value ? ({ M: 'Male', F: 'Female', O: 'Other' }[value] || value) : null;
+  return value ? ({ M: 'Male', F: 'Female', O: 'Other', U: 'Unknown' }[value] || value) : null;
 }
 
 export function ProfileCard({ profile, loading, error, totalStudies }: { profile?: PatientProfile; loading: boolean; error: boolean; totalStudies: number }) {

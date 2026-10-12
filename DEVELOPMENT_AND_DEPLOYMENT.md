@@ -1,9 +1,10 @@
 # Development and Deployment Checklist
 
-The mobile app calls three separate areas:
+The mobile app calls four separate areas:
 
 - **Patient Portal API**: login, registration, profile, studies, reports, shared links, and patient push-token registration.
 - **Patient Portal Web URL**: the hosted viewer displayed inside the app's WebView.
+- **Viewer API**: study metadata and DICOMweb images used by the embedded viewer.
 - **RIS API**: reservation booking and reservation history.
 
 All configured hosts must be reachable from the phone. On a physical phone, do not use `localhost` because it refers to the phone itself.
@@ -27,10 +28,10 @@ All configured hosts must be reachable from the phone. On a physical phone, do n
 4. Update `.env.local` in this mobile project with the same host:
 
    ```dotenv
-   EXPO_PUBLIC_PATIENT_PORTAL_API_URL=http://<LAPTOP_IP>:8015
+   EXPO_PUBLIC_PATIENT_PORTAL_API_URL=http://<LAPTOP_IP>:8014
    EXPO_PUBLIC_PATIENT_PORTAL_WEB_URL=http://<LAPTOP_IP>:9007
    EXPO_PUBLIC_SHARED_STUDY_URL=http://<LAPTOP_IP>:9007/patientPortal/shared-study
-   EXPO_PUBLIC_RIS_API_URL=http://<LAPTOP_IP>:8014
+   EXPO_PUBLIC_RIS_API_URL=http://<LAPTOP_IP>:8015
    EXPO_PUBLIC_RIS_TENANT_ID=1
    EXPO_PUBLIC_RIS_BRANCH_ID=1
    EXPO_PUBLIC_IS_RESERVATION_ENABLED=true
@@ -39,8 +40,8 @@ All configured hosts must be reachable from the phone. On a physical phone, do n
 5. Start the backend services from Visual Studio and ensure they listen on `0.0.0.0` or `[::]`, not only `127.0.0.1`:
 
    - Configuration Manager: `8012`
-   - Patient Portal API: `8015`
-   - RIS API: `8014`
+   - Patient Portal API: `8014`
+   - RIS API: `8015`
    - Viewer API: `8002`
 
    Check the listeners with:

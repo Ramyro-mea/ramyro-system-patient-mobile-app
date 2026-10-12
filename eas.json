@@ -19,11 +19,11 @@
         "credentialsSource": "local"
       },
       "env": {
-        "EXPO_PUBLIC_PATIENT_PORTAL_API_URL": "http://192.168.1.101:8014",
-        "EXPO_PUBLIC_PATIENT_PORTAL_WEB_URL": "http://192.168.1.101:9007",
-        "EXPO_PUBLIC_RIS_REGISTRATION_URL": "http://10.10.10.55:9007/registration",
-        "EXPO_PUBLIC_SHARED_STUDY_URL": "http://192.168.1.101:9007/patientPortal/shared-study",
-        "EXPO_PUBLIC_RIS_API_URL": "http://192.168.1.101:8015",
+        "EXPO_PUBLIC_PATIENT_PORTAL_API_URL": "http://192.168.1.102:8014",
+        "EXPO_PUBLIC_PATIENT_PORTAL_WEB_URL": "http://192.168.1.102:9008",
+        "EXPO_PUBLIC_RIS_REGISTRATION_URL": "http://192.168.1.102:9008/registration",
+        "EXPO_PUBLIC_SHARED_STUDY_URL": "http://192.168.1.102:9008/patientPortal/shared-study",
+        "EXPO_PUBLIC_RIS_API_URL": "http://192.168.1.102:8015",
         "EXPO_PUBLIC_RIS_TENANT_ID": "1",
         "EXPO_PUBLIC_RIS_BRANCH_ID": "1",
         "EXPO_PUBLIC_IS_RESERVATION_ENABLED": "true"

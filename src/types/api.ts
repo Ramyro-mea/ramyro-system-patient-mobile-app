@@ -28,6 +28,8 @@ export interface PushTokenRegistrationRequest {
 
 export interface PatientProfile {
   userId: string;
+  title: string | null;
+  nationality: string | null;
   email: string | null;
   phoneNumber: string | null;
   firstName: string | null;
@@ -38,6 +40,7 @@ export interface PatientProfile {
   gender: string | null;
   address: string | null;
   ssn: string | null;
+  emergencyContactNumber: string | null;
   patientID: string | null;
   mrn: string | null;
   typeofPatientID: string | null;
@@ -76,14 +79,44 @@ export interface SharedStudyLinkResponse {
 export interface CreateMobileVisitRequest {
   entityBranchId: number;
   patientId?: string | null;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
+  title: string | null;
+  nationality: string | null;
+  firstName: string | null;
+  middleName: string | null;
+  lastName: string | null;
+  ssn: string | null;
+  phoneNumber: string | null;
   email: string | null;
-  dateOfBirth: string;
   gender: string | null;
-  reasonForReservation: string | null;
+  dateOfBirth: string | null;
+  address: string | null;
+  emergencyContactNumber: string | null;
+  weightKg: number | null;
+  heightCm: number | null;
   procedureId: number | null;
+}
+
+export type RisClinicalRequirement = 0 | 1 | 2;
+
+export type PatientFieldKey =
+  | 'title'
+  | 'nationality'
+  | 'firstName'
+  | 'middleName'
+  | 'lastName'
+  | 'ssn'
+  | 'phoneNumber'
+  | 'email'
+  | 'gender'
+  | 'dateOfBirth'
+  | 'address'
+  | 'emergencyContactNumber'
+  | 'weightKg'
+  | 'heightCm';
+
+export interface PatientFieldConfiguration {
+  fieldKey: PatientFieldKey;
+  requirement: RisClinicalRequirement;
 }
 
 export interface MobileProcedureOption {
@@ -118,7 +151,6 @@ export interface PatientVisit {
   createdAtUtc: string;
   scheduledAtUtc: string;
   roomName: string | null;
-  reasonForReservation: string | null;
   totalPrice: number | null;
   depositedAmount: number | null;
   currencyCode: string | null;

@@ -19,10 +19,12 @@ import { ProcedurePrerequisiteList } from '@/src/components/reservations/procedu
 import { WebScreenHeader } from '@/src/components/web-screen-header';
 import { env } from '@/src/config/env';
 import { usePatientProfile } from '@/src/hooks/use-patient-data';
-import { useProcedureOptions, useProcedurePrerequisites } from '@/src/hooks/use-reservations';
-import { reservationSchema, type ReservationValues } from '@/src/lib/validation';
+import { usePatientFieldConfigurations, useProcedureOptions, useProcedurePrerequisites } from '@/src/hooks/use-reservations';
+import { createReservationSchema, type ReservationValues } from '@/src/lib/validation';
+import { buildReservationRequest } from '@/src/lib/reservation-request';
 import {
   countryCallingCodeOptions,
+  countryOptions,
   DEFAULT_COUNTRY_CODE,
   DEFAULT_COUNTRY_ISO,
   getCountryCallingCode,
@@ -33,33 +35,39 @@ import { useGuestReceipt } from '@/src/providers/guest-receipt-provider';
 import { useAppTheme } from '@/src/providers/theme-provider';
 import { errorMessages } from '@/src/lib/api-client';
 import { reservationsService } from '@/src/services/reservations';
-import type { PendingBookingAttachment } from '@/src/types/api';
+import type { PatientFieldKey, PendingBookingAttachment } from '@/src/types/api';
 
 const submitError = 'We could not send your reservation request. Please try again.';
 const uploadError = 'Your reservation was created, but one or more documents could not be uploaded.';
+const titleOptions = ['Mr', 'Mrs', 'Ms', 'Miss', 'Mx', 'Dr', 'Prof', 'Master', 'Baby']
+  .map((value) => ({ label: value, value }));
 const emptyValues: ReservationValues = {
+  title: '',
+  nationality: '',
   firstName: '',
+  middleName: '',
   lastName: '',
+  ssn: '',
   countryCode: DEFAULT_COUNTRY_CODE,
   phoneNumber: '',
   email: '',
-  dateOfBirth: '',
+  dateOfBirth: '1990-01-01',
   gender: '',
-  reasonForReservation: '',
+  address: '',
+  emergencyCountryCode: DEFAULT_COUNTRY_CODE,
+  emergencyContactNumber: '',
+  weightKg: '',
+  heightCm: '',
   procedureId: null,
 };
 
 function getProfileGender(gender: string | null) {
   const value = gender?.trim().toLowerCase();
-  if (value === 'male') return 'Male';
-  if (value === 'female') return 'Female';
+  if (value === 'male' || value === 'm') return 'Male';
+  if (value === 'female' || value === 'f') return 'Female';
+  if (value === 'other' || value === 'o') return 'Other';
+  if (value === 'unknown' || value === 'u') return 'Unknown';
   return '';
-}
-
-function buildInternationalPhone(countryCode: string, phoneNumber: string) {
-  const code = countryCode.replace(/\D/g, '');
-  const number = phoneNumber.replace(/\D/g, '').replace(/^0+/, '');
-  return `+${code}${number}`;
 }
 
 interface CompletedBooking {
@@ -78,6 +86,9 @@ export default function BookReservationScreen() {
   const [serverErrors, setServerErrors] = useState<string[]>([]);
   const [countryOpen, setCountryOpen] = useState(false);
   const [countryIso, setCountryIso] = useState(DEFAULT_COUNTRY_ISO);
+  const [nationalityOpen, setNationalityOpen] = useState(false);
+  const [emergencyCountryOpen, setEmergencyCountryOpen] = useState(false);
+  const [emergencyCountryIso, setEmergencyCountryIso] = useState(DEFAULT_COUNTRY_ISO);
   const [procedureOpen, setProcedureOpen] = useState(false);
   const [prerequisitesOpen, setPrerequisitesOpen] = useState(true);
   const [dateOpen, setDateOpen] = useState(false);
@@ -87,6 +98,44 @@ export default function BookReservationScreen() {
   const [completedBooking, setCompletedBooking] = useState<CompletedBooking | null>(null);
   const [retryingUploads, setRetryingUploads] = useState(false);
 
+  const fieldConfigurationsQuery = usePatientFieldConfigurations();
+  const requiredFieldConfigurations = useMemo(
+    () => (fieldConfigurationsQuery.data ?? []).filter((field) => field.requirement === 2),
+    [fieldConfigurationsQuery.data],
+  );
+  const requiredFieldKeys = useMemo(
+    () => new Set(requiredFieldConfigurations.map((field) => field.fieldKey)),
+    [requiredFieldConfigurations],
+  );
+  const lockedPatientFieldKeys = useMemo(() => {
+    const profile = token ? profileQuery.data : null;
+    if (!profile) return new Set<PatientFieldKey>();
+
+    const populatedFields: Partial<Record<PatientFieldKey, unknown>> = {
+      title: profile.title?.trim(),
+      nationality: profile.nationality?.trim(),
+      firstName: profile.firstName?.trim(),
+      middleName: profile.middleName?.trim(),
+      lastName: profile.lastName?.trim(),
+      ssn: profile.ssn?.trim(),
+      phoneNumber: profile.phoneNumber?.trim(),
+      email: profile.email?.trim(),
+      gender: getProfileGender(profile.gender),
+      dateOfBirth: profile.dateOfBirth?.trim(),
+      address: profile.address?.trim(),
+      emergencyContactNumber: profile.emergencyContactNumber?.trim(),
+    };
+
+    return new Set(
+      (Object.entries(populatedFields) as [PatientFieldKey, unknown][])
+        .filter(([, value]) => Boolean(value))
+        .map(([fieldKey]) => fieldKey),
+    );
+  }, [profileQuery.data, token]);
+  const reservationSchema = useMemo(
+    () => createReservationSchema(requiredFieldKeys),
+    [requiredFieldKeys],
+  );
   const { control, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<ReservationValues>({
     resolver: zodResolver(reservationSchema),
     defaultValues: emptyValues,
@@ -121,31 +170,32 @@ export default function BookReservationScreen() {
     if (!token || !profileQuery.data || profileApplied.current) return;
     const profile = profileQuery.data;
     const profilePhone = splitInternationalPhone(profile.phoneNumber);
+    const emergencyPhone = splitInternationalPhone(profile.emergencyContactNumber);
     reset({
       ...emptyValues,
+      title: profile.title ?? '',
+      nationality: profile.nationality?.toUpperCase() ?? '',
       firstName: profile.firstName ?? '',
+      middleName: profile.middleName ?? '',
       lastName: profile.lastName ?? '',
+      ssn: profile.ssn ?? '',
       countryCode: profilePhone.countryCode,
       phoneNumber: profilePhone.nationalNumber,
       email: profile.email ?? '',
-      dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? '',
+      dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? emptyValues.dateOfBirth,
       gender: getProfileGender(profile.gender),
+      address: profile.address ?? '',
+      emergencyCountryCode: emergencyPhone.countryCode,
+      emergencyContactNumber: emergencyPhone.nationalNumber,
     });
     setCountryIso(profilePhone.countryIso);
+    setEmergencyCountryIso(emergencyPhone.countryIso);
     profileApplied.current = true;
   }, [profileQuery.data, reset, token]);
 
   const mutation = useMutation({
     mutationFn: async (values: ReservationValues) => {
-      const { countryCode, phoneNumber, email, gender, reasonForReservation, ...details } = values;
-      const request = {
-        ...details,
-        phoneNumber: buildInternationalPhone(countryCode, phoneNumber),
-        email: email.trim() || null,
-        gender: gender || null,
-        reasonForReservation: reasonForReservation?.trim() || null,
-        entityBranchId: env.risBranchId,
-      };
+      const request = buildReservationRequest(env.risBranchId, values, requiredFieldKeys);
 
       return token
         ? {
@@ -229,6 +279,7 @@ export default function BookReservationScreen() {
       await saveReceipt(result.data).catch(() => undefined);
     } else {
       await queryClient.invalidateQueries({ queryKey: ['patient-visits'] }).catch(() => undefined);
+      await queryClient.invalidateQueries({ queryKey: ['patient-profile'] }).catch(() => undefined);
     }
 
     try {
@@ -267,6 +318,192 @@ export default function BookReservationScreen() {
     }
   };
 
+  const renderPatientField = (fieldKey: PatientFieldKey) => {
+    const locked = lockedPatientFieldKeys.has(fieldKey);
+    switch (fieldKey) {
+      case 'title':
+        return (
+          <Controller key={fieldKey} control={control} name="title" render={({ field: { value, onChange } }) => (
+            <CompactSelectField label="Title" placeholder="Select title" value={value} options={titleOptions} error={errors.title?.message} disabled={locked} onChange={onChange} />
+          )} />
+        );
+      case 'nationality':
+        return (
+          <Controller key={fieldKey} control={control} name="nationality" render={({ field: { value, onChange } }) => (
+            <SelectField
+              label="Nationality"
+              placeholder="Select nationality"
+              value={value || null}
+              options={countryOptions}
+              open={nationalityOpen}
+              disabled={locked}
+              error={errors.nationality?.message}
+              emptyMessage="No countries match your search."
+              searchable
+              searchPlaceholder="Search countries"
+              onOpen={() => setNationalityOpen(true)}
+              onClose={() => setNationalityOpen(false)}
+              onChange={(nextValue) => onChange(nextValue ?? '')}
+            />
+          )} />
+        );
+      case 'firstName':
+        return (
+          <Controller key={fieldKey} control={control} name="firstName" render={({ field: { value, onChange, onBlur } }) => (
+            <FormField label="First name" value={value} editable={!locked} onChangeText={onChange} onBlur={onBlur} error={errors.firstName?.message} autoCapitalize="words" returnKeyType="next" />
+          )} />
+        );
+      case 'middleName':
+        return (
+          <Controller key={fieldKey} control={control} name="middleName" render={({ field: { value, onChange, onBlur } }) => (
+            <FormField label="Middle name" value={value} editable={!locked} onChangeText={onChange} onBlur={onBlur} error={errors.middleName?.message} autoCapitalize="words" returnKeyType="next" />
+          )} />
+        );
+      case 'lastName':
+        return (
+          <Controller key={fieldKey} control={control} name="lastName" render={({ field: { value, onChange, onBlur } }) => (
+            <FormField label="Last name" value={value} editable={!locked} onChangeText={onChange} onBlur={onBlur} error={errors.lastName?.message} autoCapitalize="words" returnKeyType="next" />
+          )} />
+        );
+      case 'ssn':
+        return (
+          <Controller key={fieldKey} control={control} name="ssn" render={({ field: { value, onChange, onBlur } }) => (
+            <FormField label="National ID / SSN" value={value} editable={!locked} onChangeText={onChange} onBlur={onBlur} error={errors.ssn?.message} returnKeyType="next" />
+          )} />
+        );
+      case 'phoneNumber':
+        return (
+          <View key={fieldKey} style={styles.phoneRow}>
+            <View style={styles.countryCode}>
+              <Controller control={control} name="countryCode" render={({ field: { onChange } }) => (
+                <SelectField
+                  label="Country code"
+                  placeholder="Select country"
+                  value={countryIso}
+                  options={countryCallingCodeOptions}
+                  open={countryOpen}
+                  disabled={locked}
+                  error={errors.countryCode?.message}
+                  emptyMessage="No countries match your search."
+                  searchable
+                  searchPlaceholder="Search country or code"
+                  onOpen={() => setCountryOpen(true)}
+                  onClose={() => setCountryOpen(false)}
+                  onChange={(nextIso) => {
+                    if (!nextIso) return;
+                    const country = getCountryCallingCode(nextIso);
+                    if (!country) return;
+                    setCountryIso(country.iso2);
+                    onChange(country.callingCode);
+                  }}
+                />
+              )} />
+            </View>
+            <View style={styles.mobileNumber}>
+              <Controller control={control} name="phoneNumber" render={({ field: { value, onChange, onBlur } }) => (
+                <FormField label="Mobile number" value={value} editable={!locked} onChangeText={onChange} onBlur={onBlur} error={errors.phoneNumber?.message} keyboardType="phone-pad" textContentType="telephoneNumber" autoComplete="tel" returnKeyType="next" />
+              )} />
+            </View>
+          </View>
+        );
+      case 'email':
+        return (
+          <Controller key={fieldKey} control={control} name="email" render={({ field: { value, onChange, onBlur } }) => (
+            <FormField label="Email" placeholder="name@example.com" value={value} editable={!locked} onChangeText={onChange} onBlur={onBlur} error={errors.email?.message} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} textContentType="emailAddress" autoComplete="email" returnKeyType="next" />
+          )} />
+        );
+      case 'gender':
+        return (
+          <Controller key={fieldKey} control={control} name="gender" render={({ field: { value, onChange } }) => (
+            <CompactSelectField
+              label="Gender"
+              placeholder="Select gender"
+              value={value}
+              options={[
+                { label: 'Male', value: 'Male' },
+                { label: 'Female', value: 'Female' },
+                { label: 'Other', value: 'Other' },
+                { label: 'Unknown', value: 'Unknown' },
+              ]}
+              error={errors.gender?.message}
+              disabled={locked}
+              onChange={onChange}
+            />
+          )} />
+        );
+      case 'dateOfBirth':
+        return (
+          <Controller key={fieldKey} control={control} name="dateOfBirth" render={({ field: { value, onChange } }) => (
+            <DateField
+              label="Date of birth"
+              value={value}
+              error={errors.dateOfBirth?.message}
+              disabled={locked}
+              open={dateOpen}
+              onOpen={() => setDateOpen(true)}
+              onClose={() => setDateOpen(false)}
+              onChange={onChange}
+            />
+          )} />
+        );
+      case 'address':
+        return (
+          <Controller key={fieldKey} control={control} name="address" render={({ field: { value, onChange, onBlur } }) => (
+            <FormField label="Address" value={value} editable={!locked} onChangeText={onChange} onBlur={onBlur} error={errors.address?.message} autoCapitalize="sentences" returnKeyType="next" />
+          )} />
+        );
+      case 'emergencyContactNumber':
+        return (
+          <View key={fieldKey} style={styles.phoneRow}>
+            <View style={styles.countryCode}>
+              <Controller control={control} name="emergencyCountryCode" render={({ field: { onChange } }) => (
+                <SelectField
+                  label="Country code"
+                  placeholder="Select country"
+                  value={emergencyCountryIso}
+                  options={countryCallingCodeOptions}
+                  open={emergencyCountryOpen}
+                  disabled={locked}
+                  error={errors.emergencyCountryCode?.message}
+                  emptyMessage="No countries match your search."
+                  searchable
+                  searchPlaceholder="Search country or code"
+                  onOpen={() => setEmergencyCountryOpen(true)}
+                  onClose={() => setEmergencyCountryOpen(false)}
+                  onChange={(nextIso) => {
+                    if (!nextIso) return;
+                    const country = getCountryCallingCode(nextIso);
+                    if (!country) return;
+                    setEmergencyCountryIso(country.iso2);
+                    onChange(country.callingCode);
+                  }}
+                />
+              )} />
+            </View>
+            <View style={styles.mobileNumber}>
+              <Controller control={control} name="emergencyContactNumber" render={({ field: { value, onChange, onBlur } }) => (
+                <FormField label="Emergency contact" value={value} editable={!locked} onChangeText={onChange} onBlur={onBlur} error={errors.emergencyContactNumber?.message} keyboardType="phone-pad" returnKeyType="next" />
+              )} />
+            </View>
+          </View>
+        );
+      case 'weightKg':
+        return (
+          <Controller key={fieldKey} control={control} name="weightKg" render={({ field: { value, onChange, onBlur } }) => (
+            <FormField label="Weight (kg)" placeholder="kg" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.weightKg?.message} keyboardType="decimal-pad" returnKeyType="next" />
+          )} />
+        );
+      case 'heightCm':
+        return (
+          <Controller key={fieldKey} control={control} name="heightCm" render={({ field: { value, onChange, onBlur } }) => (
+            <FormField label="Height (cm)" placeholder="cm" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.heightCm?.message} keyboardType="decimal-pad" returnKeyType="next" />
+          )} />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <ScreenBackground>
       <SafeAreaView edges={['bottom']} style={styles.safe}>
@@ -282,85 +519,19 @@ export default function BookReservationScreen() {
                 <Text style={{ color: colors.textMuted }}>Loading your profile...</Text>
               ) : null}
 
-              <Controller control={control} name="firstName" render={({ field: { value, onChange, onBlur } }) => (
-                <FormField label="First name" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.firstName?.message} autoCapitalize="words" returnKeyType="next" />
-              )} />
-              <Controller control={control} name="lastName" render={({ field: { value, onChange, onBlur } }) => (
-                <FormField label="Last name" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.lastName?.message} autoCapitalize="words" returnKeyType="next" />
-              )} />
-              <View style={styles.phoneRow}>
-                <View style={styles.countryCode}>
-                  <Controller control={control} name="countryCode" render={({ field: { onChange } }) => (
-                    <SelectField
-                      label="Country code"
-                      placeholder="Select country"
-                      value={countryIso}
-                      options={countryCallingCodeOptions}
-                      open={countryOpen}
-                      error={errors.countryCode?.message}
-                      emptyMessage="No countries match your search."
-                      searchable
-                      searchPlaceholder="Search country or code"
-                      onOpen={() => setCountryOpen(true)}
-                      onClose={() => setCountryOpen(false)}
-                      onChange={(nextIso) => {
-                        if (!nextIso) return;
-                        const country = getCountryCallingCode(nextIso);
-                        if (!country) return;
-                        setCountryIso(country.iso2);
-                        onChange(country.callingCode);
-                      }}
-                    />
-                  )} />
+              {fieldConfigurationsQuery.isPending ? (
+                <View style={styles.prerequisitesLoading}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={[styles.prerequisitesMessage, { color: colors.textMuted }]}>Loading reservation requirements...</Text>
                 </View>
-                <View style={styles.mobileNumber}>
-                  <Controller control={control} name="phoneNumber" render={({ field: { value, onChange, onBlur } }) => (
-                    <FormField label="Mobile number" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.phoneNumber?.message} keyboardType="phone-pad" textContentType="telephoneNumber" autoComplete="tel" returnKeyType="next" />
-                  )} />
+              ) : fieldConfigurationsQuery.isError ? (
+                <View style={styles.lookupError}>
+                  <Text style={[styles.lookupErrorText, { color: colors.danger }]}>Reservation requirements could not be loaded.</Text>
+                  <AppButton label="Try again" variant="outline" onPress={() => void fieldConfigurationsQuery.refetch()} />
                 </View>
-              </View>
-              <Controller control={control} name="email" render={({ field: { value, onChange, onBlur } }) => (
-                <FormField label="Email (optional)" placeholder="name@example.com" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.email?.message} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} textContentType="emailAddress" autoComplete="email" returnKeyType="next" />
-              )} />
-              <Controller control={control} name="dateOfBirth" render={({ field: { value, onChange } }) => (
-                <DateField
-                  label="Date of birth"
-                  value={value}
-                  error={errors.dateOfBirth?.message}
-                  open={dateOpen}
-                  onOpen={() => setDateOpen(true)}
-                  onClose={() => setDateOpen(false)}
-                  onChange={onChange}
-                />
-              )} />
-              <Controller control={control} name="gender" render={({ field: { value, onChange } }) => (
-                <CompactSelectField
-                  label="Gender (optional)"
-                  placeholder="Select gender"
-                  value={value}
-                  options={[
-                    { label: 'Male', value: 'Male' },
-                    { label: 'Female', value: 'Female' },
-                  ]}
-                  error={errors.gender?.message}
-                  onChange={onChange}
-                />
-              )} />
-              <Controller control={control} name="reasonForReservation" render={({ field: { value, onChange, onBlur } }) => (
-                <FormField
-                  label="Reason for reservation (optional)"
-                  value={value ?? ''}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.reasonForReservation?.message}
-                  placeholder="Briefly describe how we can help"
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                  style={styles.reasonInput}
-                />
-              )} />
-
+              ) : (
+                requiredFieldConfigurations.map((field) => renderPatientField(field.fieldKey))
+              )}
               <Controller control={control} name="procedureId" render={({ field: { value, onChange } }) => (
                 <SelectField
                   label="Modality and procedure (optional)"
@@ -475,6 +646,8 @@ export default function BookReservationScreen() {
                   disabled={Boolean(
                     attachmentPickerBusy
                     || (token && profileQuery.isPending)
+                    || fieldConfigurationsQuery.isPending
+                    || fieldConfigurationsQuery.isError
                     || (procedureId !== null && (prerequisitesQuery.isPending || prerequisitesQuery.isError))
                   )}
                   loading={isSubmitting || mutation.isPending}
@@ -498,7 +671,6 @@ const styles = StyleSheet.create({
   phoneRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   countryCode: { flex: 1.15 },
   mobileNumber: { flex: 1 },
-  reasonInput: { minHeight: 100 },
   lookupError: { gap: 9 },
   lookupErrorText: { fontSize: 13, lineHeight: 18 },
   prerequisites: { borderWidth: 1, borderRadius: 18, overflow: 'hidden' },

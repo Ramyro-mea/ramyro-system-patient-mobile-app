@@ -49,7 +49,6 @@ const visit: PatientVisit = {
   createdAtUtc: '2026-09-03T10:00:00Z',
   scheduledAtUtc: '2026-09-03T10:00:00Z',
   roomName: null,
-  reasonForReservation: null,
   totalPrice: null,
   depositedAmount: null,
   currencyCode: null,

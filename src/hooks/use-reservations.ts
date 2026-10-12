@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { env } from '@/src/config/env';
 import { useAuth } from '@/src/providers/auth-provider';
 import { reservationsService } from '@/src/services/reservations';
 
@@ -17,6 +18,14 @@ export function useProcedureOptions() {
   return useQuery({
     queryKey: ['booking-procedure-options'],
     queryFn: () => reservationsService.getProcedureOptions(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function usePatientFieldConfigurations() {
+  return useQuery({
+    queryKey: ['patient-field-configurations', env.risBranchId],
+    queryFn: () => reservationsService.getPatientFieldConfigurations(),
     staleTime: 5 * 60 * 1000,
   });
 }

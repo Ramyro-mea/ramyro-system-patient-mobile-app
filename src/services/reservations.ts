@@ -5,6 +5,7 @@ import type {
   CreateMobileVisitRequest,
   GuestReservationReceipt,
   MobileProcedureOption,
+  PatientFieldConfiguration,
   PendingBookingAttachment,
   PatientVisit,
   RisPrerequisite,
@@ -129,6 +130,16 @@ export const reservationsService = {
       {},
       undefined,
       'Procedures could not be loaded.',
+    );
+  },
+
+  getPatientFieldConfigurations() {
+    return requestApiAt<PatientFieldConfiguration[]>(
+      env.risApiUrl,
+      `/api/ris/patient-field-configurations?entityBranchId=${encodeURIComponent(env.risBranchId)}&tenantId=${encodeURIComponent(env.risTenantId)}`,
+      {},
+      undefined,
+      'Reservation requirements could not be loaded.',
     );
   },
 

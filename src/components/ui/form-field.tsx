@@ -8,10 +8,20 @@ interface Props extends TextInputProps { label: string; error?: string; }
 export function FormField({ label, error, secureTextEntry, style, ...props }: Props) {
   const { colors } = useAppTheme();
   const [visible, setVisible] = useState(false);
+  const editable = props.editable !== false;
   return (
     <View style={styles.group}>
       <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
-      <View style={[styles.inputRow, { borderColor: error ? colors.danger : colors.border, backgroundColor: colors.surfaceMuted }]}>
+      <View
+        style={[
+          styles.inputRow,
+          {
+            borderColor: error ? colors.danger : colors.border,
+            backgroundColor: colors.surfaceMuted,
+            opacity: editable ? 1 : 0.55,
+          },
+        ]}
+      >
         <TextInput
           {...props}
           secureTextEntry={secureTextEntry && !visible}

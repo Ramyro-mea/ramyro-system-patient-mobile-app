@@ -10,6 +10,7 @@ interface Props {
   label: string;
   value: string;
   error?: string;
+  disabled?: boolean;
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -20,6 +21,7 @@ export function DateField({
   label,
   value,
   error,
+  disabled = false,
   open,
   onOpen,
   onClose,
@@ -56,12 +58,15 @@ export function DateField({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
+        accessibilityState={{ disabled }}
+        disabled={disabled}
         onPress={onOpen}
         style={[
           styles.field,
           {
             borderColor: error ? colors.danger : colors.border,
             backgroundColor: colors.surfaceMuted,
+            opacity: disabled ? 0.55 : 1,
           },
         ]}
       >

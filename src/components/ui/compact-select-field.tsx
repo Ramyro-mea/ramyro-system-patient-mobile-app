@@ -15,10 +15,11 @@ interface Props {
   value: string;
   options: CompactSelectOption[];
   error?: string;
+  disabled?: boolean;
   onChange: (value: string) => void;
 }
 
-export function CompactSelectField({ label, placeholder, value, options, error, onChange }: Props) {
+export function CompactSelectField({ label, placeholder, value, options, error, disabled = false, onChange }: Props) {
   const { colors, mode } = useAppTheme();
 
   return (
@@ -30,8 +31,10 @@ export function CompactSelectField({ label, placeholder, value, options, error, 
           {
             backgroundColor: colors.surfaceMuted,
             borderColor: error ? colors.danger : colors.border,
+            opacity: disabled ? 0.55 : 1,
           },
         ]}
+        pointerEvents={disabled ? 'none' : 'auto'}
       >
         <Host
           colorScheme={mode}
@@ -51,7 +54,7 @@ export function CompactSelectField({ label, placeholder, value, options, error, 
             ))}
           </Picker>
         </Host>
-        {value ? (
+        {value && !disabled ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Clear ${label.toLowerCase()}`}

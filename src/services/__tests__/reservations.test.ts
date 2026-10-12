@@ -4,13 +4,20 @@ import { reservationsService } from '@/src/services/reservations';
 const request = {
   entityBranchId: 1,
   patientId: 'patient-123',
+  title: 'Mr',
+  nationality: 'EG',
   firstName: 'Ramy',
+  middleName: null,
   lastName: 'Patient',
+  ssn: null,
   phoneNumber: '+201000000000',
   email: 'patient@example.com',
   dateOfBirth: '1990-01-02',
   gender: 'Male',
-  reasonForReservation: 'Persistent headache',
+  address: null,
+  emergencyContactNumber: null,
+  weightKg: null,
+  heightCm: null,
   procedureId: null,
 };
 
@@ -44,7 +51,20 @@ describe('reservation requests', () => {
       `${env.risApiUrl}/api/patient/bookings/mobile-request/guest?tenantId=${env.risTenantId}`,
     );
     expect((init?.headers as Record<string, string>).Authorization).toBeUndefined();
-    expect(JSON.parse(init?.body as string)).not.toHaveProperty('patientId');
+    const submitted = JSON.parse(init?.body as string);
+    expect(submitted).not.toHaveProperty('patientId');
+    expect(submitted).toMatchObject({
+      entityBranchId: 1,
+      title: 'Mr',
+      nationality: 'EG',
+      firstName: 'Ramy',
+      middleName: null,
+      lastName: 'Patient',
+      phoneNumber: '+201000000000',
+      dateOfBirth: '1990-01-02',
+      weightKg: null,
+      heightCm: null,
+    });
   });
 
   it('authenticates patient creation and visit retrieval', async () => {
@@ -59,7 +79,6 @@ describe('reservation requests', () => {
       createdAtUtc: '2026-09-03T10:00:00Z',
       scheduledAtUtc: '2026-09-03T10:00:00Z',
       roomName: null,
-      reasonForReservation: null,
       totalPrice: 115,
       depositedAmount: 25,
       currencyCode: 'EGP',
@@ -74,7 +93,7 @@ describe('reservation requests', () => {
     await reservationsService.create(request, 'patient-token');
     await expect(reservationsService.getVisits('patient-token')).resolves.toEqual([visit]);
 
-    expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string).patientId).toBe('patient-123');
+    expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual(request);
     expect((fetchMock.mock.calls[0][1]?.headers as Record<string, string>).Authorization)
       .toBe('Bearer patient-token');
     expect(String(fetchMock.mock.calls[1][0]))
@@ -106,6 +125,18 @@ describe('reservation requests', () => {
 
     expect(String(fetchMock.mock.calls[0][0])).toBe(
       `${env.risApiUrl}/api/patient/bookings/procedure-options?branchId=${env.risBranchId}&tenantId=${env.risTenantId}`,
+    );
+    expect((fetchMock.mock.calls[0][1]?.headers as Record<string, string>).Authorization).toBeUndefined();
+  });
+
+  it('loads branch patient-field requirements anonymously', async () => {
+    const fields = [{ fieldKey: 'firstName', requirement: 2 }];
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(successful(fields));
+
+    await expect(reservationsService.getPatientFieldConfigurations()).resolves.toEqual(fields);
+
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      `${env.risApiUrl}/api/ris/patient-field-configurations?entityBranchId=${env.risBranchId}&tenantId=${env.risTenantId}`,
     );
     expect((fetchMock.mock.calls[0][1]?.headers as Record<string, string>).Authorization).toBeUndefined();
   });
