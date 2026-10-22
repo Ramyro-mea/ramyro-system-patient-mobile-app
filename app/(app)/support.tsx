@@ -218,7 +218,13 @@ export default function SupportScreen() {
             contentContainerStyle={[styles.transcriptContent, messages.length === 0 && styles.emptyTranscript]}
             data={messages}
             keyExtractor={(item) => String(item.id)}
-            renderItem={({ item }) => <SupportMessageBubble message={item} onOpenAttachment={(attachment) => void openAttachment(attachment)} />}
+            renderItem={({ item }) => (
+              <SupportMessageBubble
+                message={item}
+                authToken={token!}
+                onOpenAttachment={(attachment) => void openAttachment(attachment)}
+              />
+            )}
             ListHeaderComponent={messageQuery.hasNextPage ? (
               <AppButton
                 label="Load older messages"

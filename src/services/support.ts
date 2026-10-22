@@ -12,6 +12,10 @@ export const supportKeys = {
   messages: (ticketId: number) => ['support', 'messages', ticketId] as const,
 };
 
+export function supportAttachmentUrl(attachmentId: number) {
+  return `${env.chatServerHost}/api/chat/support/attachments/${attachmentId}`;
+}
+
 type ProblemDetails = {
   title?: unknown;
   detail?: unknown;
@@ -149,7 +153,7 @@ export const supportService = {
     let response: Response;
     try {
       response = await expoFetch(
-        `${env.chatServerHost}/api/chat/support/attachments/${attachment.id}`,
+        supportAttachmentUrl(attachment.id),
         { headers: { Authorization: `Bearer ${token}` } },
       );
     } catch {
