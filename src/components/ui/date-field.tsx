@@ -1,6 +1,6 @@
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { formatDateOnly, parseDateOnly } from '@/src/lib/date-time';
@@ -33,10 +33,6 @@ export function DateField({
     () => parseDateOnly(value) ?? new Date(1990, 0, 1, 12),
   );
 
-  useEffect(() => {
-    if (open) setDraftDate(parseDateOnly(value) ?? new Date(1990, 0, 1, 12));
-  }, [open, value]);
-
   const handleChange = (event: DateTimePickerEvent, date?: Date) => {
     if (Platform.OS === 'ios') {
       if (event.type === 'set' && date) setDraftDate(date);
@@ -60,7 +56,10 @@ export function DateField({
         accessibilityLabel={label}
         accessibilityState={{ disabled }}
         disabled={disabled}
-        onPress={onOpen}
+        onPress={() => {
+          setDraftDate(parseDateOnly(value) ?? new Date(1990, 0, 1, 12));
+          onOpen();
+        }}
         style={[
           styles.field,
           {

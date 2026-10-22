@@ -1,3 +1,9 @@
+import type {
+  AttachmentSource,
+  AttachmentStatus,
+  PendingAttachment,
+} from '@/src/types/attachments';
+
 export type ApiStatus = 1 | 2 | 3 | 4 | 5;
 
 export interface ApiResponse<T> {
@@ -167,17 +173,6 @@ export interface GuestReservationReceipt {
   procedureDisplayName: string | null;
 }
 
-export type BookingAttachmentSource = 'camera' | 'file';
-export type BookingAttachmentStatus = 'pending' | 'uploading' | 'uploaded' | 'failed';
-
-export interface PendingBookingAttachment {
-  id: string;
-  uri: string;
-  fileName: string;
-  mimeType: string;
-  sizeBytes: number | null;
-  source: BookingAttachmentSource;
-  status: BookingAttachmentStatus;
-  error: string | null;
-  webFile?: Blob;
-}
+export type BookingAttachmentSource = AttachmentSource;
+export type BookingAttachmentStatus = AttachmentStatus;
+export type PendingBookingAttachment = PendingAttachment;

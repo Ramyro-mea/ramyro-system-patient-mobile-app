@@ -7,6 +7,7 @@ export default function ProtectedLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="reservations" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="support" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="viewer" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="report/[studyId]" options={{ animation: 'slide_from_right' }} />
     </Stack>

@@ -1,29 +1,32 @@
 # Ramyro Patient Portal Mobile
 
-Expo SDK 57 / React Native patient portal. The app supports invitation-code registration, login, guest and authenticated RIS reservation requests, authenticated reservation tracking, profile and study browsing, report preview and sharing, authenticated hosted viewer access, and creation of links for the existing web shared-study flow. It intentionally has no anonymous shared-study route.
+Expo SDK 57 / React Native patient portal. The app supports invitation-code registration, login, guest and authenticated RIS reservation requests, authenticated reservation tracking, profile and study browsing, report preview and sharing, authenticated hosted viewer access, patient support chat, and creation of links for the existing web shared-study flow. It intentionally has no anonymous shared-study route.
 
 ## Requirements
 
 - Node.js 22.13 or newer
 - An iPhone with the current Expo Go app
 - The PC and iPhone on the same Wi-Fi network
-- Patient Portal API listening on `0.0.0.0:8007`
+- Patient Portal API listening on `0.0.0.0:8014`
+- Chat Service listening on `0.0.0.0:8007`
 - Configuration Manager listening on `0.0.0.0:8012`
 - Patient Portal web frontend listening on `0.0.0.0:9007`
 - Viewer API listening on `0.0.0.0:8002`
-- RIS API listening on `0.0.0.0:8014`
+- RIS API listening on `0.0.0.0:8015`
 
-Allow TCP ports `8002`, `8007`, `8012`, `8014`, `9007`, and Metro's `8081` through Windows Firewall. Before starting Expo, verify the web portal and Configuration Manager runtime-config endpoint open in iPhone Safari.
+Allow TCP ports `8002`, `8007`, `8012`, `8014`, `8015`, `9007`, and Metro's `8081` through Windows Firewall. Before starting Expo, verify the web portal and Configuration Manager runtime-config endpoint open in iPhone Safari.
 
 ## Configuration
 
 Create `.env.local` when an override is needed. The development variables are:
 
 ```dotenv
-EXPO_PUBLIC_PATIENT_PORTAL_API_URL=http://10.10.10.79:8007
+EXPO_PUBLIC_PATIENT_PORTAL_API_URL=http://10.10.10.79:8014
 EXPO_PUBLIC_PATIENT_PORTAL_WEB_URL=http://10.10.10.79:9007
 EXPO_PUBLIC_SHARED_STUDY_URL=http://10.10.10.79:9007/patientPortal/shared-study
-EXPO_PUBLIC_RIS_API_URL=http://10.10.10.79:8014
+EXPO_PUBLIC_RIS_API_URL=http://10.10.10.79:8015
+EXPO_PUBLIC_CHAT_SERVER_HOST=http://10.10.10.79:8007
+EXPO_PUBLIC_CHAT_HUB_URL=http://10.10.10.79:8007/chatHub
 EXPO_PUBLIC_RIS_TENANT_ID=1
 EXPO_PUBLIC_RIS_BRANCH_ID=1
 ```
@@ -57,7 +60,7 @@ npx --yes eas-cli@latest build --platform ios --profile preview
 
 Allow EAS to configure signing and push notifications, including an Apple Push Notifications service (APNs) key if needed. Include the registered iPhone in the provisioning profile. Open the completed build's installation link in iPhone Safari and install the app.
 
-The preview profile explicitly uses the current local test server at `192.168.1.100`; `.env.local` is ignored by Git and is not included in EAS uploads. Update the `preview.env` values in `eas.json` and rebuild if the server address changes. Keep the phone on a network that can reach this server and allow Local Network access if iOS asks. The phone and backend also need internet access for push delivery.
+The preview profile explicitly uses the current local test server at `192.168.1.102`; `.env.local` is ignored by Git and is not included in EAS uploads. Update the `preview.env` values in `eas.json` and rebuild if the server address changes. Keep the phone on a network that can reach this server and allow Local Network access if iOS asks. The phone and backend also need internet access for push delivery.
 
 To test:
 
@@ -98,6 +101,7 @@ Local HTTP is for development only. Customer deployments must use HTTPS and envi
 - `/book-reservation` - guest or authenticated reservation request
 - `/(app)` - protected profile and study dashboard
 - `/(app)/reservations` - authenticated pending-order list
+- `/(app)/support` - authenticated patient support chat and closed-request history
 - `/(app)/viewer` - authenticated hosted DICOM viewer
 - `/(app)/report/[studyId]` - native report retrieval and local PDF.js preview
 

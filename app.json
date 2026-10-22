@@ -54,7 +54,7 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Allow Ramyro Patient Portal to use your camera to capture a document for your reservation.",
+          "cameraPermission": "Allow Ramyro Patient Portal to use your camera to attach images to reservations and support requests.",
           "photosPermission": false,
           "microphonePermission": false
         }
@@ -84,9 +84,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "30f73d77-113e-480f-9a44-30708657532a"
+        "projectId": "4ad06dac-de10-4a41-8271-6e99fd8ad3f6"
       }
     },
-    "owner": "muhannad-abdallah"
+    "owner": "mourad88"
   }
 }

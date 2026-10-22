@@ -4,6 +4,7 @@ import { AuthProvider } from '@/src/providers/auth-provider';
 import { AppThemeProvider } from '@/src/providers/theme-provider';
 import { GuestReceiptProvider } from '@/src/providers/guest-receipt-provider';
 import { NotificationProvider } from '@/src/providers/notification-provider';
+import { SupportRealtimeProvider } from '@/src/providers/support-realtime-provider';
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(() => new QueryClient({
@@ -14,7 +15,9 @@ export function AppProviders({ children }: PropsWithChildren) {
       <AppThemeProvider>
         <AuthProvider>
           <GuestReceiptProvider>
-            <NotificationProvider>{children}</NotificationProvider>
+            <SupportRealtimeProvider>
+              <NotificationProvider>{children}</NotificationProvider>
+            </SupportRealtimeProvider>
           </GuestReceiptProvider>
         </AuthProvider>
       </AppThemeProvider>

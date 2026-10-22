@@ -7,7 +7,8 @@ import { Platform } from 'react-native';
 import { patientPortalService } from '@/src/services/patient-portal';
 
 const PUSH_TOKEN_KEY = 'patient_portal_expo_push_token';
-const ANDROID_CHANNEL_ID = 'visit-admission';
+const VISIT_ADMISSION_CHANNEL_ID = 'visit-admission';
+const PATIENT_SUPPORT_CHANNEL_ID = 'patient-support';
 let registrationQueue: Promise<void> = Promise.resolve();
 
 Notifications.setNotificationHandler({
@@ -33,13 +34,19 @@ function hasNotificationPermission(
   return permissions.granted;
 }
 
-async function ensureAndroidChannel() {
+async function ensureAndroidChannels() {
   if (Platform.OS !== 'android') {
     return;
   }
 
-  await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+  await Notifications.setNotificationChannelAsync(VISIT_ADMISSION_CHANNEL_ID, {
     name: 'Visit admission',
+    importance: Notifications.AndroidImportance.MAX,
+    sound: 'default',
+  });
+  await Notifications.setNotificationChannelAsync(PATIENT_SUPPORT_CHANNEL_ID, {
+    name: 'Patient support',
+    description: 'Messages and updates from technical support',
     importance: Notifications.AndroidImportance.MAX,
     sound: 'default',
   });
@@ -73,7 +80,7 @@ async function registerPatientPushNotificationsNow(
     return;
   }
 
-  await ensureAndroidChannel();
+  await ensureAndroidChannels();
 
   if (!(await getPermission())) {
     return;

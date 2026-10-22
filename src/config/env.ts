@@ -5,6 +5,8 @@ const webUrl = process.env.EXPO_PUBLIC_PATIENT_PORTAL_WEB_URL?.trim();
 const sharedStudyUrl = process.env.EXPO_PUBLIC_SHARED_STUDY_URL?.trim();
 const risApiUrl = process.env.EXPO_PUBLIC_RIS_API_URL?.trim();
 const risRegistrationUrl = process.env.EXPO_PUBLIC_RIS_REGISTRATION_URL?.trim();
+const chatServerHost = process.env.EXPO_PUBLIC_CHAT_SERVER_HOST?.trim();
+const chatHubUrl = process.env.EXPO_PUBLIC_CHAT_HUB_URL?.trim();
 const isReservationEnabled =
   process.env.EXPO_PUBLIC_IS_RESERVATION_ENABLED?.trim().toLowerCase() ===
   'true';
@@ -25,6 +27,10 @@ export const env = {
   risRegistrationUrl: trimTrailingSlash(
     risRegistrationUrl
       || `${trimTrailingSlash(webUrl || 'http://10.10.10.79:9007')}/registration`,
+  ),
+  chatServerHost: trimTrailingSlash(chatServerHost || 'http://10.10.10.79:8007'),
+  chatHubUrl: trimTrailingSlash(
+    chatHubUrl || `${trimTrailingSlash(chatServerHost || 'http://10.10.10.79:8007')}/chatHub`,
   ),
   risTenantId: positiveInteger(process.env.EXPO_PUBLIC_RIS_TENANT_ID, 1),
   risBranchId: positiveInteger(process.env.EXPO_PUBLIC_RIS_BRANCH_ID, 1),

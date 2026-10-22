@@ -13,12 +13,14 @@ export const genericNetworkError = 'Something went wrong. Please try again.';
 export class ApiError extends Error {
   readonly messages: string[];
   readonly status?: number;
+  readonly data?: unknown;
 
-  constructor(messages: string[], status?: number) {
+  constructor(messages: string[], status?: number, data?: unknown) {
     super(messages[0] || 'The request could not be completed.');
     this.name = 'ApiError';
     this.messages = messages;
     this.status = status;
+    this.data = data;
   }
 }
 

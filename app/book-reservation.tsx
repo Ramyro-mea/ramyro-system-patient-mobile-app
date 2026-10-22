@@ -163,10 +163,6 @@ export default function BookReservationScreen() {
   );
 
   useEffect(() => {
-    if (procedureId !== null) setPrerequisitesOpen(true);
-  }, [procedureId]);
-
-  useEffect(() => {
     if (!token || !profileQuery.data || profileApplied.current) return;
     const profile = profileQuery.data;
     const profilePhone = splitInternationalPhone(profile.phoneNumber);
@@ -551,6 +547,7 @@ export default function BookReservationScreen() {
                     if (nextValue === null) {
                       clearProcedure();
                     } else {
+                      setPrerequisitesOpen(true);
                       onChange(nextValue);
                     }
                   }}

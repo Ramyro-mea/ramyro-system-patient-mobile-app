@@ -24,6 +24,8 @@
         "EXPO_PUBLIC_RIS_REGISTRATION_URL": "http://192.168.1.102:9008/registration",
         "EXPO_PUBLIC_SHARED_STUDY_URL": "http://192.168.1.102:9008/patientPortal/shared-study",
         "EXPO_PUBLIC_RIS_API_URL": "http://192.168.1.102:8015",
+        "EXPO_PUBLIC_CHAT_SERVER_HOST": "http://192.168.1.102:8007",
+        "EXPO_PUBLIC_CHAT_HUB_URL": "http://192.168.1.102:8007/chatHub",
         "EXPO_PUBLIC_RIS_TENANT_ID": "1",
         "EXPO_PUBLIC_RIS_BRANCH_ID": "1",
         "EXPO_PUBLIC_IS_RESERVATION_ENABLED": "true"
